@@ -1,0 +1,56 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Bullet : MonoBehaviour
+{
+    [SerializeField]private GameObject bulletPrefab;
+    private Queue<GameObject> pool;
+    private int poolSize = 10;
+    private float bulletSpeed = 5f;
+    // Start is called before the first frame update
+    void Start()
+    {
+        pool = new Queue<GameObject>();
+        for(int i=0; i< poolSize; i++)
+        {
+            GameObject bullet = Instantiate(bulletPrefab);
+            bullet.SetActive(false);
+            pool.Enqueue(bullet);
+        }
+    }
+    public void GetBullet(Vector3 position, Vector3 direction)
+    {
+        Debug.Log($"GetBullet called: Pool size = {pool.Count}");
+        if(pool.Count > 0)
+        {
+            GameObject bullet = pool.Dequeue();
+            bullet.SetActive(true);
+            bullet.transform.position = position;
+            
+            // Thông báo cho bullet về vị trí phát bắn
+            ReuseButtle bulletScript = bullet.GetComponent<ReuseButtle>();
+            if (bulletScript != null)
+            {
+                bulletScript.OnBulletSpawned(position);
+            }
+            
+            Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
+            if (rb == null)
+            {
+                bullet.SetActive(false);
+                pool.Enqueue(bullet);
+                return;
+            }
+            
+            rb.velocity = direction * bulletSpeed;
+        }
+    }
+    public void ReturnBullet(GameObject bullet)
+    {
+        bullet.SetActive(false);
+        pool.Enqueue(bullet);
+    }
+
+
+}
