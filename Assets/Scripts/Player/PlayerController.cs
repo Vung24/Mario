@@ -5,14 +5,11 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController Instance { get; private set; }
-    private float speed = 9f;
+    public float speed = 8f;
     [Header("Jumping")]
-    private float jumpForce = 18f;
+    public float jumpForce = 17f;
     private int jumpCount = 0;
-    private int maxJump = 2;
-    [Header("Wall Jump")]
-    [SerializeField] private float wallJumpHorizontalForce = 12f;
-    [SerializeField] private float wallJumpVerticalForce = 16f;
+    public int maxJump = 2;
     [SerializeField] private float groundNormalThreshold = 0.6f;
     [SerializeField] private float wallNormal = 0.6f;
     private Animator animator;
@@ -20,8 +17,8 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb;
     private bool isGrounded = false;
     private bool isTouchingWall = false;
-    private int wallSide = 0;
     private int facingDirection = 1;
+    private float dashEndTime;
 
     public Rigidbody2D Body => rb;
     public bool IsGrounded => isGrounded;
@@ -45,6 +42,11 @@ public class PlayerController : MonoBehaviour
     }
     private void HandleMovement()
     {
+        if (Time.time < dashEndTime)
+        {
+            return;
+        }
+
         float moveInput = Input.GetAxisRaw("Horizontal");
         rb.velocity = new Vector2(moveInput * speed, rb.velocity.y);
         if(moveInput > 0)
@@ -71,44 +73,37 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if(isTouchingWall && !isGrounded && jumpCount < maxJump)
-        {
-            float jumpDirection = wallSide == 1 ? -1f : 1f;
-            rb.velocity = new Vector2(jumpDirection * wallJumpHorizontalForce, wallJumpVerticalForce);
-            jumpCount = maxJump;
-            isTouchingWall = false;
-            return;
-        }
-
         if(jumpCount < maxJump)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             isGrounded = false;
             jumpCount++;
+            AudioManager.Instance?.PlayJumpSound();
+            if(jumpCount == 2){
+                animator.SetBool("DoubleJump", true);
+            }
         }
     }
     private void OnCollisionEnter2D(Collision2D other)
     {
-        EvaluateCollisionContacts(other);
+        EvaluateCollisionContacts(other, true);
     }
 
     private void OnCollisionStay2D(Collision2D other)
     {
-        EvaluateCollisionContacts(other);
+        EvaluateCollisionContacts(other, false);
     }
 
     private void OnCollisionExit2D(Collision2D other)
     {
         isGrounded = false;
         isTouchingWall = false;
-        wallSide = 0;
     }
 
-    private void EvaluateCollisionContacts(Collision2D collision)
+    private void EvaluateCollisionContacts(Collision2D collision, bool isEnter)
     {
         bool foundGround = false;
         bool foundWall = false;
-        int detectedWallSide = 0;
 
         foreach(ContactPoint2D contact in collision.contacts)
         {
@@ -122,18 +117,16 @@ public class PlayerController : MonoBehaviour
             if(Mathf.Abs(normal.x) > wallNormal)
             {
                 foundWall = true;
-                detectedWallSide = normal.x > 0f ? -1 : 1;
             }
         }
 
         isGrounded = foundGround;
-        if(isGrounded)
+        if(isGrounded && isEnter)
         {
             jumpCount = 0;
         }
 
         isTouchingWall = foundWall && !isGrounded;
-        wallSide = isTouchingWall ? detectedWallSide : 0;
     }
 
     private void UpdateAnimation(){
@@ -148,7 +141,7 @@ public class PlayerController : MonoBehaviour
     {
         speed = newSpeed;
         jumpForce = newJumpForce;
-        maxJump = Mathf.Max(1, newMaxJump);
+        maxJump = Mathf.Clamp(newMaxJump, 1, 3);
     }
 
     public void SetHorizontalVelocity(float xVelocity)
@@ -169,5 +162,23 @@ public class PlayerController : MonoBehaviour
         }
 
         rb.AddForce(impulse, ForceMode2D.Impulse);
+    }
+
+    public void BeginDash(float xVelocity, float duration)
+    {
+        if (rb == null)
+        {
+            return;
+        }
+
+        dashEndTime = Mathf.Max(dashEndTime, Time.time + Mathf.Max(0f, duration));
+        rb.velocity = new Vector2(xVelocity, rb.velocity.y);
+    }
+
+    public void SetStartCheckpoint(Transform checkpoint)
+    {
+        rb.isKinematic = true;
+        transform.position = checkpoint.position;
+        //rb.isKinematic = false;
     }
 }

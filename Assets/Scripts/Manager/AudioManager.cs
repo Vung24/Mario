@@ -5,11 +5,12 @@ using UnityEngine;
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
-    [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioSource effectAudioSource;
-    [SerializeField] private AudioClip backgroundMusic;
-    [SerializeField] private AudioClip jumpSound;
-    [SerializeField] private AudioClip shootSound;
+    [SerializeField] private AudioSource backGroundAudio;
+    [SerializeField] private AudioSource effectAudio;
+    [SerializeField] private AudioClip backgroundClip;
+    [SerializeField] private AudioClip jumpClip;
+    [SerializeField] private AudioClip shootClip;
+    private bool SoundOn = true;
 
     void Awake()
     {
@@ -23,21 +24,35 @@ public class AudioManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (audioSource != null && backgroundMusic != null)
+        if (backGroundAudio != null && backgroundClip != null)
         {
-            audioSource.clip = backgroundMusic;
-            audioSource.loop = true;
-            audioSource.Play();
+            backGroundAudio.clip = backgroundClip;
+            backGroundAudio.loop = true;
+            backGroundAudio.Play();
         }
     }
     public void PlayJumpSound()
     {
-        if (effectAudioSource != null && jumpSound != null)
+        if (effectAudio != null && jumpClip != null)
         {
-            effectAudioSource.PlayOneShot(jumpSound);
+            effectAudio.PlayOneShot(jumpClip);
         }
     }
-    // Update is called once per frame
+    public void ToggleSound()
+    {
+        SoundOn = !SoundOn;
+        if (backGroundAudio != null)
+        {
+            backGroundAudio.mute = !SoundOn;
+        }
+
+        if (effectAudio != null)
+        {
+            effectAudio.mute = !SoundOn;
+        }
+    }
+
+    public bool IsSoundOn() => SoundOn;
     void Update()
     {
         

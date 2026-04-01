@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class PlayerSkill : MonoBehaviour
 {
+    private const string SelectedCharacterKey = "SelectedCharacterIndex";
+    private const int DefaultMaxJump = 2;
+    private const int NinjaFrogMaxJump = 3;
+
     private enum CharacterType
     {
         MaskDude = 0,
@@ -14,37 +18,24 @@ public class PlayerSkill : MonoBehaviour
 
     [Header("Character")]
     [SerializeField] private CharacterType activeCharacter = CharacterType.MaskDude;
-    [SerializeField] private bool allowSwitchByNumberKeys = true;
 
     [Header("MaskDude")]
-    [SerializeField] private float maskDudeSpeed = 8f;
-    [SerializeField] private float maskDudeJumpForce = 16f;
-    [SerializeField] private int maskDudeMaxJump = 2;
-    [SerializeField] private float maskDudeDashSpeed = 18f;
-    [SerializeField] private float maskDudeDashCooldown = 1f;
-
-    [Header("NinjaFrog")]
-    [SerializeField] private float ninjaFrogSpeed = 11f;
-    [SerializeField] private float ninjaFrogJumpForce = 15f;
-    [SerializeField] private int ninjaFrogMaxJump = 3;
+    private float dashSpeed = 18f;
+    private float dashDuration = 0.18f;
+    private float dashCooldown = 5f;
 
     [Header("PinkMan")]
-    [SerializeField] private float pinkManSpeed = 7f;
-    [SerializeField] private float pinkManJumpForce = 18f;
-    [SerializeField] private int pinkManMaxJump = 2;
-    [SerializeField] private float pinkManGlideGravityScale = 0.35f;
-    [SerializeField] private KeyCode pinkManGlideKey = KeyCode.LeftShift;
-
-    [Header("VitualGuy")]
-    [SerializeField] private float vitualGuySpeed = 10f;
-    [SerializeField] private float vitualGuyJumpForce = 16f;
-    [SerializeField] private int vitualGuyMaxJump = 2;
-    [SerializeField] private float vitualGuyWallSlideSpeed = 3f;
+    private float pinkManGlideGravityScale = 0.35f;
+    private KeyCode pinkManGlideKey = KeyCode.LeftShift;
+    private float pinkCooldown = 10f;
+    private float nextGlideTime;
+    private bool isGlidingLastFrame;
 
     private PlayerController playerController;
     private Rigidbody2D rb;
     private float defaultGravityScale;
-    private float nextMaskDudeDashTime;
+    private float nextdashTime;
+    private bool guyIsImmortal;
 
     void Start()
     {
@@ -56,38 +47,19 @@ public class PlayerSkill : MonoBehaviour
             defaultGravityScale = rb.gravityScale;
         }
 
+        int savedCharacter = PlayerPrefs.GetInt(SelectedCharacterKey, (int)activeCharacter);
+        if (savedCharacter < (int)CharacterType.MaskDude || savedCharacter > (int)CharacterType.VitualGuy)
+        {
+            savedCharacter = (int)activeCharacter;
+        }
+
+        activeCharacter = (CharacterType)savedCharacter;
         ApplyCharacterProfile(activeCharacter);
     }
 
     void Update()
     {
-        HandleCharacterSwitch();
         HandleCharacterSkill();
-    }
-
-    private void HandleCharacterSwitch()
-    {
-        if (!allowSwitchByNumberKeys)
-        {
-            return;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            ApplyCharacterProfile(CharacterType.MaskDude);
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            ApplyCharacterProfile(CharacterType.NinjaFrog);
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            ApplyCharacterProfile(CharacterType.PinkMan);
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha4))
-        {
-            ApplyCharacterProfile(CharacterType.VitualGuy);
-        }
     }
 
     private void HandleCharacterSkill()
@@ -114,22 +86,17 @@ public class PlayerSkill : MonoBehaviour
             HandleVitualGuySkill();
             return;
         }
-
-        ResetGravityToDefault();
     }
-
     private void HandleMaskDudeSkill()
     {
-        ResetGravityToDefault();
-
-        if (!Input.GetKeyDown(KeyCode.E) || Time.time < nextMaskDudeDashTime)
+        if (!Input.GetKeyDown(KeyCode.E) || Time.time < nextdashTime)
         {
             return;
         }
 
-        float dashVelocity = playerController.FacingDirection * maskDudeDashSpeed;
-        playerController.SetHorizontalVelocity(dashVelocity);
-        nextMaskDudeDashTime = Time.time + maskDudeDashCooldown;
+        float dashVelocity = playerController.FacingDirection * dashSpeed;
+        playerController.BeginDash(dashVelocity, dashDuration);
+        nextdashTime = Time.time + dashCooldown;
     }
 
     private void HandlePinkManSkill()
@@ -139,28 +106,33 @@ public class PlayerSkill : MonoBehaviour
             return;
         }
 
-        bool canGlide = !playerController.IsGrounded && rb.velocity.y < 0f && Input.GetKey(pinkManGlideKey);
+        bool canGlide = !playerController.IsGrounded && rb.velocity.y < 0f && Input.GetKey(pinkManGlideKey) && Time.time >= nextGlideTime;
         rb.gravityScale = canGlide ? pinkManGlideGravityScale : defaultGravityScale;
+
+        if (isGlidingLastFrame && !canGlide)
+        {
+            nextGlideTime = Time.time + pinkCooldown;
+        }
+
+        isGlidingLastFrame = canGlide;
     }
 
     private void HandleVitualGuySkill()
     {
-        if (rb == null)
-        {
-            return;
-        }
-
-        if (playerController.IsTouchingWall && !playerController.IsGrounded && rb.velocity.y < 0f)
-        {
-            rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, -vitualGuyWallSlideSpeed));
-        }
-        else
-        {
-            ResetGravityToDefault();
-        }
     }
 
-    private void ResetGravityToDefault()
+    public bool GuyImmortal()
+    {
+        if (activeCharacter != CharacterType.VitualGuy || !guyIsImmortal)
+        {
+            return false;
+        }
+        Debug.Log("Immortal");
+        guyIsImmortal = false;
+        return true;
+    }
+
+    private void ResetGravity()
     {
         if (rb == null)
         {
@@ -173,41 +145,44 @@ public class PlayerSkill : MonoBehaviour
     private void ApplyCharacterProfile(CharacterType characterType)
     {
         activeCharacter = characterType;
+        PlayerPrefs.SetInt(SelectedCharacterKey, (int)characterType);
+        PlayerPrefs.Save();
 
         if (playerController == null)
         {
             return;
         }
+        ResetGravity();
 
         if (characterType == CharacterType.MaskDude)
         {
-            playerController.ConfigureStats(maskDudeSpeed, maskDudeJumpForce, maskDudeMaxJump);
-            ResetGravityToDefault();
+            guyIsImmortal = false;
+            playerController.ConfigureStats(playerController.speed, playerController.jumpForce, DefaultMaxJump);
             return;
         }
 
         if (characterType == CharacterType.NinjaFrog)
         {
-            playerController.ConfigureStats(ninjaFrogSpeed, ninjaFrogJumpForce, ninjaFrogMaxJump);
-            ResetGravityToDefault();
+            guyIsImmortal = false;
+            playerController.ConfigureStats(playerController.speed, playerController.jumpForce, NinjaFrogMaxJump);
             return;
         }
 
         if (characterType == CharacterType.PinkMan)
         {
-            playerController.ConfigureStats(pinkManSpeed, pinkManJumpForce, pinkManMaxJump);
-            ResetGravityToDefault();
+            guyIsImmortal = false;
+            playerController.ConfigureStats(playerController.speed, playerController.jumpForce, DefaultMaxJump);
             return;
         }
 
         if (characterType == CharacterType.VitualGuy)
         {
-            playerController.ConfigureStats(vitualGuySpeed, vitualGuyJumpForce, vitualGuyMaxJump);
-            ResetGravityToDefault();
+            guyIsImmortal = true;
+            playerController.ConfigureStats(playerController.speed, playerController.jumpForce, DefaultMaxJump);
             return;
         }
 
-        playerController.ConfigureStats(vitualGuySpeed, vitualGuyJumpForce, vitualGuyMaxJump);
-        ResetGravityToDefault();
+        guyIsImmortal = false;
+        playerController.ConfigureStats(playerController.speed, playerController.jumpForce, DefaultMaxJump);
     }
 }

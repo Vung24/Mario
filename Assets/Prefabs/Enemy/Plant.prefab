@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 5401732992098850330}
   m_Layer: 0
   m_Name: Plant
-  m_TagString: Untagged
+  m_TagString: Plant
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 2176032988740447261}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 44.35, y: -2.16, z: 0.81710887}
+  m_LocalPosition: {x: 27.3, y: -0.9985199, z: -0.085430145}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -72,8 +72,6 @@ MonoBehaviour:
   bulletManager: {fileID: 0}
   fireRate: 1
   shootPoint: {fileID: 4721502449668887770}
-  detectionRange: 10
-  attackAnimationTrigger: Attack
 --- !u!212 &5033498180421717975
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -158,7 +156,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0.32937622, y: -0.33669662}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -169,7 +167,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.0001, y: 0.0001}
+  m_Size: {x: 1.255249, y: 2.013054}
   m_EdgeRadius: 0
 --- !u!1 &8384546632711024598
 GameObject:
@@ -196,7 +194,7 @@ Transform:
   m_GameObject: {fileID: 8384546632711024598}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.43, y: 0.32, z: 0.16278207}
+  m_LocalPosition: {x: -0.47, y: 0.28, z: 0.16278207}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

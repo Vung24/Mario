@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3549676742772188728}
   - component: {fileID: 4583713786704689188}
   - component: {fileID: 7931452997718659750}
+  - component: {fileID: -1371233785549939205}
   m_Layer: 0
   m_Name: PinkMan
   m_TagString: Player
@@ -194,8 +195,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c8683f7cc6b00a4ca2ba81416c7b205, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallJumpHorizontalForce: 12
-  wallJumpVerticalForce: 16
   groundNormalThreshold: 0.6
   wallNormal: 0.6
 --- !u!114 &7931452997718659750
@@ -210,3 +209,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8292c3d55d449a4a919237779d9d19f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-1371233785549939205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5986116251787591743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aacadbac05ffda245b43ab2c467473fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activeCharacter: 0
+  maskDudeSpeed: 8
+  maskDudeJumpForce: 16
+  maskDudeMaxJump: 2
+  maskDudeDashSpeed: 18
+  maskDudeDashCooldown: 1
+  ninjaFrogSpeed: 11
+  ninjaFrogJumpForce: 15
+  ninjaFrogMaxJump: 2
+  pinkManSpeed: 7
+  pinkManJumpForce: 18
+  pinkManMaxJump: 2
+  pinkManGlideGravityScale: 0.35
+  pinkManGlideKey: 304
+  vitualGuySpeed: 10
+  vitualGuyJumpForce: 16
+  vitualGuyMaxJump: 2

@@ -5,10 +5,13 @@ public class PlayerCollision : MonoBehaviour
 {
     private Animator animator;
     private Rigidbody2D rb;
+    private PlayerSkill playerSkill;
     private readonly HashSet<int> triggeredBoxIds = new HashSet<int>();
+    private readonly HashSet<int> triggeredEnemyIds = new HashSet<int>();
 
     private float boxBottomNormalThreshold = 0.5f;
     private float upwardHitVelocityThreshold = 0.05f;
+    private float downwardHitVelocityThreshold = -0.05f;
     private float boxCenterYOffsetTolerance = 0.02f;
 
     // Start is called before the first frame update
@@ -16,6 +19,7 @@ public class PlayerCollision : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        playerSkill = GetComponent<PlayerSkill>();
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -25,13 +29,12 @@ public class PlayerCollision : MonoBehaviour
         }
         else if (other.gameObject.CompareTag("Traps"))
         {
-            animator.SetTrigger("Hit");
-            GameManager.Instance?.GameOver();
+            TriggerPlayerDefeat();
         }
         else if(other.gameObject.CompareTag("Enemy")){
-            GameManager.Instance?.GameOver();
+            TriggerPlayerDefeat();
         }
-        else if (other.gameObject.CompareTag("Win"))
+        else if (other.gameObject.CompareTag("Finish"))
         {
             GameManager.Instance?.GameWin();
         }
@@ -39,7 +42,7 @@ public class PlayerCollision : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Win"))
+        if (collision.gameObject.CompareTag("Finish"))
         {
             GameManager.Instance?.GameWin();
             return;
@@ -52,13 +55,19 @@ public class PlayerCollision : MonoBehaviour
             return;
         }
 
+        IEnemy enemy = collision.gameObject.GetComponentInParent<IEnemy>();
+        if (enemy != null)
+        {
+            HitEnemy(collision, enemy);
+            return;
+        }
+
         if (!collision.gameObject.CompareTag("Traps"))
         {
             return;
         }
 
-        animator.SetTrigger("Hit");
-        GameManager.Instance?.GameOver();
+        TriggerPlayerDefeat();
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -75,6 +84,7 @@ public class PlayerCollision : MonoBehaviour
     private void OnCollisionExit2D(Collision2D collision)
     {
         triggeredBoxIds.Remove(collision.gameObject.GetInstanceID());
+        triggeredEnemyIds.Remove(collision.gameObject.GetInstanceID());
     }
 
     private void TryTriggerBoxHit(Collision2D collision, BoxController box)
@@ -122,6 +132,70 @@ public class PlayerCollision : MonoBehaviour
         }
 
         return false;
+    }
+
+    private void HitEnemy(Collision2D collision, IEnemy enemy)
+    {
+        MonoBehaviour enemyBehaviour = enemy as MonoBehaviour;
+        int enemyId = enemyBehaviour != null
+            ? enemyBehaviour.gameObject.GetInstanceID()
+            : collision.gameObject.GetInstanceID();
+
+        if (triggeredEnemyIds.Contains(enemyId))
+        {
+            return;
+        }
+
+        if (HitTopEnemy(collision))
+        {
+            triggeredEnemyIds.Add(enemyId);
+            enemy.OnHitByPlayer();
+            return;
+        }
+
+        TriggerPlayerDefeat();
+    }
+
+    private bool HitTopEnemy(Collision2D collision)
+    {
+        bool playerIsAboveEnemy = transform.position.y > (collision.transform.position.y + boxCenterYOffsetTolerance);
+        if (!playerIsAboveEnemy)
+        {
+            return false;
+        }
+
+        bool isMovingDown = collision.relativeVelocity.y < downwardHitVelocityThreshold ||
+                            (rb != null && rb.velocity.y < downwardHitVelocityThreshold);
+
+        if (isMovingDown)
+        {
+            return true;
+        }
+
+        foreach (ContactPoint2D contact in collision.contacts)
+        {
+            if (contact.normal.y > boxBottomNormalThreshold)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void TriggerPlayerDefeat()
+    {
+        if (playerSkill != null && playerSkill.GuyImmortal())
+        {
+            return;
+        }
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Hit");
+        }
+
+        GameManager.Instance?.GameOver();
     }
 
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,9 +11,14 @@ public class GameManager : MonoBehaviour
     [Header("Spawn")]
     [SerializeField] private Transform player;
     [SerializeField] private GameObject[] characterPrefabs;
-    [SerializeField] private Transform startCheckpoint;
+    [SerializeField] public Transform startCheckpoint;
     [SerializeField] private Transform winCheckpoint;
+    [Header("Camera")]
     [SerializeField] private CameraFollower cameraFollower;
+    [Header("Game UI")]
+    [SerializeField] private GameObject winPanel;
+    [SerializeField] private GameObject gameOverPanel;
+    // private bool isGameOver = false;
     private bool hasWon = false;
 
     void Awake()
@@ -24,12 +30,14 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        SpawnPlayer();
+        winPanel.SetActive(false);
+        gameOverPanel.SetActive(false);
     }
     public void GameOver()
     {
@@ -37,21 +45,36 @@ public class GameManager : MonoBehaviour
         {
             return;
         }
-
-        Debug.Log("Game Over!");
+        if (gameOverPanel != null)
+        {
+            StartCoroutine(WaitforSeconds());
+            gameOverPanel.SetActive(true);
+            Time.timeScale = 0f;
+        }
     }
-
     public void GameWin()
     {
-        // if (hasWon)
-        // {
-        //     return;
-        // }
+        if (hasWon)
+        {
+            return;
+        }
 
-        // hasWon = true;
-        Debug.Log("You Win!");
+        hasWon = true;
+        if (winPanel != null)
+        {
+            winPanel.SetActive(true);
+            Time.timeScale = 0f;
+        }
     }
-
+    private IEnumerator WaitforSeconds()
+    {
+        yield return new WaitForSeconds(2f);
+    }
+    public void Home()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Home");
+    }
     public void SetStartCheckpoint(Transform checkpoint)
     {
         startCheckpoint = checkpoint;
@@ -64,7 +87,7 @@ public class GameManager : MonoBehaviour
             player = playerController.transform;
         }
     }
-    private void SpawnPlayer()
+    public void SpawnPlayer()
     {
         if (startCheckpoint == null)
             return;

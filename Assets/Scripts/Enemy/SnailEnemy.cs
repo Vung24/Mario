@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SnailEnemy : MonoBehaviour
+public class SnailEnemy : MonoBehaviour, IEnemy
 {
     [SerializeField] private Transform pointA;
     [SerializeField] private Transform pointB;
     [SerializeField] private float speedSnail = 1f;
+    private string shellAnimationTrigger = "OneHit";
+    private string destroyAnimationTrigger = "TwoHit";
     private bool faceMovementDirection = true;
     private bool invertFacing = false;
     private SpriteRenderer spriteRenderer;
@@ -15,22 +17,20 @@ public class SnailEnemy : MonoBehaviour
     private Vector3 pointAPosition;
     private Vector3 pointBPosition;
     private Animator animator;
-    private Rigidbody2D rb;
     private bool movingToB = true;
-    private bool isHit = false; // Trạng thái bị đạp
+    private bool isShellMode = false;
+    private bool isDestroying = false;
+    private float hitAnimLeadTime = 0.1f;
+    private float hitUpDistance = 0.25f;
+    private float hitUpDuration = 0.08f;
+    private float fallDistance = 2.5f;
+    private float fallDuration = 0.5f;
+
 
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
-        rb = GetComponent<Rigidbody2D>();
-        
-        // Disable gravity để snail không rơi
-        if (rb != null)
-        {
-            rb.gravityScale = 0f;
-            rb.velocity = Vector2.zero;
-        }
-        
+
         if (pointA == null || pointB == null)
         {
             enabled = false;
@@ -50,7 +50,7 @@ public class SnailEnemy : MonoBehaviour
 
     void Update()
     {
-        if (!isHit) // Chỉ di chuyển khi chưa bị đạp
+        if (!isShellMode && !isDestroying)
         {
             Move();
         }
@@ -74,22 +74,18 @@ public class SnailEnemy : MonoBehaviour
     }
     private void UpdateAnimation()
     {
-        if (isHit)
+        if (animator == null)
         {
-            // Khi bị đạp, chơi animation "Hit"
-            animator.SetTrigger("Hit");
+            return;
         }
-        else
-        {
-            // Khi đang chạy bình thường
-            float Value = Mathf.Abs(target.x - transform.position.x);
-            animator.SetFloat("Run", Value);
-        }
+
+        float value = (isShellMode || isDestroying) ? 0f : Mathf.Abs(target.x - transform.position.x);
+        animator.SetFloat("Run", value);
     }
     private void UpdateFacing()
     {
         float directionX = target.x - transform.position.x;
-        
+
         if (Mathf.Abs(directionX) < 0.0001f)
         {
             return;
@@ -110,26 +106,79 @@ public class SnailEnemy : MonoBehaviour
         transform.localScale = scale;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    public void OnHitByPlayer()
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (isDestroying)
         {
-            Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
-            
-            if (playerRb != null && playerRb.velocity.y < 0)
-            {
-                if (collision.gameObject.transform.position.y > transform.position.y)
-                {
-                    HitByPlayer();
-                }
-            }
+            return;
+        }
+
+        if (!isShellMode)
+        {
+            EnterShellMode();
+            return;
+        }
+
+        isDestroying = true;
+        StartCoroutine(PlayDestroyEffect());
+    }
+
+    private void EnterShellMode()
+    {
+        isShellMode = true;
+        if (animator != null && !string.IsNullOrEmpty(shellAnimationTrigger))
+        {
+            animator.SetTrigger(shellAnimationTrigger);
         }
     }
 
-    private void HitByPlayer()
+    private IEnumerator PlayDestroyEffect()
     {
-        isHit = true;
-        Debug.Log("Snail hit by player from above!");
-        enabled = false;
+        Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            colliders[i].enabled = false;
+        }
+
+        if (animator != null && !string.IsNullOrEmpty(destroyAnimationTrigger))
+        {
+            animator.SetTrigger(destroyAnimationTrigger);
+            if (hitAnimLeadTime > 0f)
+            {
+                yield return new WaitForSeconds(hitAnimLeadTime);
+            }
+        }
+
+        Vector3 startPos = transform.position;
+        Vector3 upPos = startPos + Vector3.up * hitUpDistance;
+        Vector3 downPos = upPos + Vector3.down * fallDistance;
+
+        float t = 0f;
+        while (t < hitUpDuration)
+        {
+            t += Time.deltaTime;
+            float p = Mathf.Clamp01(t / hitUpDuration);
+            transform.position = Vector3.Lerp(startPos, upPos, p);
+            yield return null;
+        }
+
+        t = 0f;
+        Color originalColor = spriteRenderer != null ? spriteRenderer.color : Color.white;
+        while (t < fallDuration)
+        {
+            t += Time.deltaTime;
+            float p = Mathf.Clamp01(t / fallDuration);
+            transform.position = Vector3.Lerp(upPos, downPos, p);
+            if (spriteRenderer != null)
+            {
+                Color c = originalColor;
+                c.a = 1f - p;
+                spriteRenderer.color = c;
+            }
+
+            yield return null;
+        }
+
+        Destroy(gameObject);
     }
 }

@@ -2,18 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlantEnemy : MonoBehaviour
+public class PlantEnemy : MonoBehaviour, IEnemy
 {
     [SerializeField] private Bullet bulletManager;
     [SerializeField] private float fireRate = 1f;
     [SerializeField] private Transform shootPoint;
-    [SerializeField] private float detectionRange = 10f;
-    [SerializeField] private string attackAnimationTrigger = "Attack"; // Tên trigger animation
+    private float detectionRange = 10f;
+    private float hitAnimLeadTime = 0.1f;
+    private float hitUpDistance = 0.2f;
+    private float hitUpDuration = 0.08f;
+    private float fallDistance = 2f;
+    private float fallDuration = 0.3f;
 
     private float fireTimer = 0f;
     private GameObject player;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
+    private bool isHit;
 
     void Start()
     {
@@ -29,13 +34,15 @@ public class PlantEnemy : MonoBehaviour
 
     void Update()
     {
-        if (player == null)
+        if (isHit)
         {
-            player = GameObject.FindGameObjectWithTag("Player");
+            return;
         }
+        player = GameObject.FindGameObjectWithTag("Player");
 
-        if (player != null && IsPlayerInRange())
+        if (player != null && PlayerInRange())
         {
+            // WaitForOneSecond();
             fireTimer -= Time.deltaTime;
 
             if (fireTimer <= 0f)
@@ -47,46 +54,106 @@ public class PlantEnemy : MonoBehaviour
         else
         {
             fireTimer = 1f / fireRate;
+            AnimationIdle();
         }
-    }
 
-    private bool IsPlayerInRange()
+    }
+    public IEnumerator WaitForOneSecond()
+    {
+        yield return new WaitForSeconds(1f);
+    }
+    public bool PlayerInRange()
     {
         if (player == null)
         {
             player = GameObject.FindGameObjectWithTag("Player");
             return false;
         }
-
         float distance = Vector3.Distance(transform.position, player.transform.position);
         bool inDistance = distance <= detectionRange;
-        
-        // Chỉ bắn nếu player ở BÊN TRÁI (player.x < plant.x)
         bool playerOnLeft = player.transform.position.x < transform.position.x;
 
         return inDistance && playerOnLeft;
     }
-
     private void ShootBullet()
     {
-        if (bulletManager != null)
-        {
-            Vector3 shootDirection = Vector3.left; 
-            
-            bulletManager.GetBullet(
-                shootPoint != null ? shootPoint.position : transform.position, 
-                shootDirection
-            );
-            
-            UpdateAnimation();
-        }
+        Vector3 shootDirection = Vector3.left;
+        WaitForOneSecond();
+        bulletManager.GetBullet(
+            shootPoint != null ? shootPoint.position : transform.position,
+            shootDirection
+        );
+        
+        AnimationAttack();
     }
-    private void UpdateAnimation()
+    private void AnimationAttack()
     {
-        if (animator != null)
+        animator.SetBool("Attack", true);
+    }
+    private void AnimationIdle()
+    {
+        animator.SetBool("Attack", false);
+    }
+
+    public void OnHitByPlayer()
+    {
+        if (isHit)
         {
-            animator.SetTrigger(attackAnimationTrigger);
+            return;
         }
+
+        isHit = true;
+        StartCoroutine(PlayDestroyEffect());
+    }
+
+    private IEnumerator PlayDestroyEffect()
+    {
+        Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            colliders[i].enabled = false;
+        }
+
+        if (animator != null && !string.IsNullOrEmpty("Hit"))
+        {
+            animator.SetTrigger("Hit");
+            if (hitAnimLeadTime > 0f)
+            {
+                yield return new WaitForSeconds(hitAnimLeadTime);
+            }
+        }
+
+        Vector3 startPos = transform.position;
+        Vector3 upPos = startPos + Vector3.up * hitUpDistance;
+        Vector3 downPos = upPos + Vector3.down * fallDistance;
+
+        float t = 0f;
+        while (t < hitUpDuration)
+        {
+            t += Time.deltaTime;
+            float p = Mathf.Clamp01(t / hitUpDuration);
+            transform.position = Vector3.Lerp(startPos, upPos, p);
+            yield return null;
+        }
+
+        t = 0f;
+        Color originalColor = spriteRenderer != null ? spriteRenderer.color : Color.white;
+        while (t < fallDuration)
+        {
+            t += Time.deltaTime;
+            float p = Mathf.Clamp01(t / fallDuration);
+            transform.position = Vector3.Lerp(upPos, downPos, p);
+            if (spriteRenderer != null)
+            {
+                Color c = originalColor;
+                c.a = 1f - p;
+                spriteRenderer.color = c;
+            }
+
+            yield return null;
+        }
+
+        Destroy(gameObject);
     }
 }
 

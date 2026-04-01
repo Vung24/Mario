@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-public class ReuseButtle : MonoBehaviour
+public class ReuseBullet : MonoBehaviour
 {
     private Vector3 spawnPosition; 
-    [SerializeField] private float maxDistance = 10f; // Khoảng cách tối đa trước khi destroy
+    [SerializeField] private float maxDistance = 10f; 
 
     public void OnBulletSpawned(Vector3 position)
     {
@@ -24,9 +24,15 @@ public class ReuseButtle : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
+        bool hitPlayer = collision.CompareTag("Player") || collision.GetComponentInParent<PlayerCollision>() != null;
+        if (hitPlayer)
         {
-            GameManager.Instance?.GameOver();
+            PlayerSkill skill = collision.GetComponentInParent<PlayerSkill>();
+            if (skill == null || !skill.GuyImmortal())
+            {
+                GameManager.Instance?.GameOver();
+            }
+
             ReturnToPool();
         }
         else

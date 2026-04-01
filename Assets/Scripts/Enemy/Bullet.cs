@@ -21,15 +21,13 @@ public class Bullet : MonoBehaviour
     }
     public void GetBullet(Vector3 position, Vector3 direction)
     {
-        Debug.Log($"GetBullet called: Pool size = {pool.Count}");
         if(pool.Count > 0)
         {
             GameObject bullet = pool.Dequeue();
             bullet.SetActive(true);
             bullet.transform.position = position;
             
-            // Thông báo cho bullet về vị trí phát bắn
-            ReuseButtle bulletScript = bullet.GetComponent<ReuseButtle>();
+            ReuseBullet bulletScript = bullet.GetComponent<ReuseBullet>();
             if (bulletScript != null)
             {
                 bulletScript.OnBulletSpawned(position);
