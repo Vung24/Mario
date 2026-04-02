@@ -19,12 +19,10 @@ public class PlayerSkill : MonoBehaviour
     [Header("Character")]
     [SerializeField] private CharacterType activeCharacter = CharacterType.MaskDude;
 
-    [Header("MaskDude")]
     private float dashSpeed = 18f;
     private float dashDuration = 0.18f;
     private float dashCooldown = 5f;
 
-    [Header("PinkMan")]
     private float pinkManGlideGravityScale = 0.35f;
     private KeyCode pinkManGlideKey = KeyCode.LeftShift;
     private float pinkCooldown = 10f;

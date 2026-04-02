@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1558801513799400733
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6110571365872723431}
+  m_Layer: 0
+  m_Name: WallCheck
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6110571365872723431
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1558801513799400733}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 288226626276722993}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5986116251787591743
 GameObject:
   m_ObjectHideFlags: 0
@@ -35,7 +66,8 @@ Transform:
   m_LocalPosition: {x: 3.479889, y: 0.16751862, z: -1.8298776}
   m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 6110571365872723431}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &3384107256560406919
@@ -195,8 +227,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c8683f7cc6b00a4ca2ba81416c7b205, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundNormalThreshold: 0.6
-  wallNormal: 0.6
+  speed: 8
+  jumpForce: 17
+  maxJump: 2
+  wallCheck: {fileID: 6110571365872723431}
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!114 &7931452997718659750
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,19 +259,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   activeCharacter: 0
-  maskDudeSpeed: 8
-  maskDudeJumpForce: 16
-  maskDudeMaxJump: 2
-  maskDudeDashSpeed: 18
-  maskDudeDashCooldown: 1
-  ninjaFrogSpeed: 11
-  ninjaFrogJumpForce: 15
-  ninjaFrogMaxJump: 2
-  pinkManSpeed: 7
-  pinkManJumpForce: 18
-  pinkManMaxJump: 2
-  pinkManGlideGravityScale: 0.35
-  pinkManGlideKey: 304
-  vitualGuySpeed: 10
-  vitualGuyJumpForce: 16
-  vitualGuyMaxJump: 2

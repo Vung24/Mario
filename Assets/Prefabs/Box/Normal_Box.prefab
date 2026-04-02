@@ -251,7 +251,7 @@ Transform:
   m_GameObject: {fileID: 7818886386676196960}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.73, y: -88.35, z: -0.04064976}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -350,6 +350,8 @@ MonoBehaviour:
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 5398325497870986988}
   objCoinEarn: {fileID: 6930903269109648941}
+  bumpDistance: 0.2
+  bumpDuration: 0.08
 --- !u!61 &8883257246410052908
 BoxCollider2D:
   m_ObjectHideFlags: 0

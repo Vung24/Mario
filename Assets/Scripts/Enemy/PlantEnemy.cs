@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class PlantEnemy : MonoBehaviour, IEnemy
 {
-    [SerializeField] private Bullet bulletManager;
     [SerializeField] private float fireRate = 1f;
     [SerializeField] private Transform shootPoint;
     private float detectionRange = 10f;
@@ -24,9 +23,10 @@ public class PlantEnemy : MonoBehaviour, IEnemy
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        if (bulletManager == null)
+
+        if (Bullet.Instance == null)
         {
-            bulletManager = GetComponent<Bullet>();
+            Debug.LogError("PlantEnemy: Bullet singleton is missing. Add one Bullet manager in scene.", this);
         }
         fireTimer = fireRate;
         player = GameObject.FindGameObjectWithTag("Player");
@@ -77,9 +77,15 @@ public class PlantEnemy : MonoBehaviour, IEnemy
     }
     private void ShootBullet()
     {
+        Bullet bulletInstance = Bullet.Instance;
+        if (bulletInstance == null)
+        {
+            return;
+        }
+
         Vector3 shootDirection = Vector3.left;
         WaitForOneSecond();
-        bulletManager.GetBullet(
+        bulletInstance.GetBullet(
             shootPoint != null ? shootPoint.position : transform.position,
             shootDirection
         );

@@ -39,6 +39,21 @@ public class GameManager : MonoBehaviour
         winPanel.SetActive(false);
         gameOverPanel.SetActive(false);
     }
+
+    public void ResetLevelUIState()
+    {
+        hasWon = false;
+        if (winPanel != null)
+        {
+            winPanel.SetActive(false);
+        }
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+    }
+
     public void GameOver()
     {
         if (hasWon)
@@ -93,7 +108,16 @@ public class GameManager : MonoBehaviour
             return;
 
         SpawnSelectedCharacter();
-        PlayerPosition();
+        if (player == null)
+        {
+            PlayerPosition();
+        }
+
+        if (player == null)
+        {
+            return;
+        }
+
         player.position = startCheckpoint.position;
 
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
@@ -135,6 +159,13 @@ public class GameManager : MonoBehaviour
 
         GameObject spawnedPlayer = Instantiate(selectedPrefab, startCheckpoint.position, Quaternion.identity);
         player = spawnedPlayer.transform;
+
+        if (cameraFollower == null)
+        {
+            cameraFollower = CameraFollower.Instance != null
+                ? CameraFollower.Instance
+                : FindObjectOfType<CameraFollower>();
+        }
 
         if (cameraFollower != null)
         {

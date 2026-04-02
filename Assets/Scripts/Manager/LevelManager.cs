@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
+    private const string CurrentLevelKey = "CurrentLevelIndex";
+
     [Header("Level Settings")]
     public GameObject[] levelPrefabs;
     public int currentLevelIndex = 0;
@@ -9,65 +11,95 @@ public class LevelManager : MonoBehaviour
 
     private Temp_LevelController curLevel;
 
-    [SerializeField] private CameraFollower cameraFollower;
-
     public Temp_LevelController[] levelControllers;
-
-
-    [Header("Player Settings")]
-    public GameObject player;
 
     void Start()
     {
+        int availableLevelCount = GetAvailableLevelCount();
+        if (availableLevelCount > 0)
+        {
+            currentLevelIndex = Mathf.Clamp(
+                PlayerPrefs.GetInt(CurrentLevelKey, currentLevelIndex),
+                0,
+                availableLevelCount - 1
+            );
+        }
+
         LoadLevel(currentLevelIndex);
     }
 
     public void LoadLevel(int levelIndex)
     {
-        if (levelIndex < 0 || levelIndex >= levelPrefabs.Length)
+        int availableLevelCount = GetAvailableLevelCount();
+        if (levelIndex < 0 || levelIndex >= availableLevelCount)
         {
             return;
         }
+
+        currentLevelIndex = levelIndex;
+        PlayerPrefs.SetInt(CurrentLevelKey, currentLevelIndex);
+        PlayerPrefs.Save();
+
+        GameManager gameManager = GameManager.Instance;
+        if (gameManager != null)
+        {
+            gameManager.ResetLevelUIState();
+        }
+
         if (currentLevel != null)
         {
             Destroy(currentLevel);
         }
 
-        // currentLevel = Instantiate(levelPrefabs[levelIndex], new Vector3() , Quaternion.identity);
-
-        curLevel = Instantiate(levelControllers[levelIndex], new Vector3(), Quaternion.identity);
-
-        //Transform spawnPoint = currentLevel.transform.Find("Checkpoint/Start");
-
-        Transform spawnPoint = curLevel.startPos;
-
-        GameManager.Instance.startCheckpoint = spawnPoint;
-        GameManager.Instance.SpawnPlayer();
-        
-        // player = spawnedPlayer.transform;
-
-        // if (cameraFollower != null)
-        // {
-        //     cameraFollower.SetFollowTarget(player.transform);
-        // }
-
-        /*if (spawnPoint != null && player != null)
+        if (!InstantiateLevel(levelIndex))
         {
-            player.transform.position = spawnPoint.position;
+            return;
         }
-        else if (player != null)
+
+        if (curLevel?.startPos == null || gameManager == null)
         {
-            player.transform.position = Vector3.zero; 
-        }*/
+            return;
+        }
+
+        gameManager.startCheckpoint = curLevel.startPos;
+        gameManager.SpawnPlayer();
     }
 
     public void NextLevel()
     {
-        currentLevelIndex++;
+        Time.timeScale = 1f;
+        int nextLevelIndex = currentLevelIndex + 1;
 
-        if (currentLevelIndex < levelPrefabs.Length)
+        if (nextLevelIndex < GetAvailableLevelCount())
         {
-            LoadLevel(currentLevelIndex);
+            LoadLevel(nextLevelIndex);
         }
+    }
+
+    private int GetAvailableLevelCount()
+    {
+        if (levelControllers != null && levelControllers.Length > 0) return levelControllers.Length;
+        return levelPrefabs?.Length ?? 0;
+    }
+
+    private bool InstantiateLevel(int levelIndex)
+    {
+        if (levelControllers != null && levelControllers.Length > levelIndex)
+        {
+            curLevel = Instantiate(levelControllers[levelIndex], Vector3.zero, Quaternion.identity);
+            currentLevel = curLevel.gameObject;
+            return true;
+        }
+
+        if (levelPrefabs != null && levelPrefabs.Length > levelIndex)
+        {
+            currentLevel = Instantiate(levelPrefabs[levelIndex], Vector3.zero, Quaternion.identity);
+            curLevel = currentLevel.GetComponent<Temp_LevelController>();
+            return currentLevel != null;
+        }
+
+        curLevel = null;
+        currentLevel = null;
+        return false;
     }
 }
