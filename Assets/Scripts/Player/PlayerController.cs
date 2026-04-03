@@ -28,6 +28,18 @@ public class PlayerController : MonoBehaviour
     private float wallJumpingDuration = 0.4f;
     private Vector2 wallJumpingPower = new Vector2(8f, 16f);
 
+    [Header("Input")]
+    [SerializeField] private bool forceMobileInput;
+
+    private float mobileMoveInput;
+    private bool jumpQueued;
+    private float currentMoveInput;
+    private Coroutine mushroomBuffRoutine;
+    private bool isMushroomBuffActive;
+    private float baseSpeed;
+    private float baseJumpForce;
+    private Vector3 baseScale;
+
     [SerializeField] private Transform wallCheck;
     [SerializeField] private LayerMask wallLayer;
 
@@ -36,6 +48,7 @@ public class PlayerController : MonoBehaviour
     public bool IsTouchingWall => isTouchingWall;
     public int FacingDirection => facingDirection;
     public bool IsFacingRight => isFacingRight;
+    private bool UseMobileInput => forceMobileInput || Application.isMobilePlatform;
     // Start is called before the first frame update
     void Start()
     {
@@ -43,17 +56,64 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        baseSpeed = speed;
+        baseJumpForce = jumpForce;
+        baseScale = transform.localScale;
+
+        if (rb != null)
+        {
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        HandleMovement();
-        HandleJump();
-        UpdateAnimation();
+        CaptureJumpInput();
+        CaptureMovementInput();
         WallSlide();
         WallJump();
+        HandleJump();
+        UpdateAnimation();
     }
+
+    private void FixedUpdate()
+    {
+        HandleMovement();
+    }
+
+    private void CaptureJumpInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpQueued = true;
+        }
+    }
+
+    private bool ConsumeJump()
+    {
+        if (!jumpQueued)
+        {
+            return false;
+        }
+
+        jumpQueued = false;
+        return true;
+    }
+
+    private void CaptureMovementInput()
+    {
+        float moveInput = Input.GetAxisRaw("Horizontal");
+
+        // Prefer virtual button direction while it is being held.
+        if (Mathf.Abs(mobileMoveInput) > 0.01f)
+        {
+            moveInput = mobileMoveInput;
+        }
+
+        currentMoveInput = moveInput;
+    }
+
     private void HandleMovement()
     {
         if (Time.time < dashEndTime)
@@ -61,13 +121,12 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        float moveInput = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(moveInput * speed, rb.velocity.y);
-        if (moveInput > 0)
+        rb.velocity = new Vector2(currentMoveInput * speed, rb.velocity.y);
+        if (currentMoveInput > 0)
         {
             SetFacingDirection(1);
         }
-        else if (moveInput < 0)
+        else if (currentMoveInput < 0)
         {
             SetFacingDirection(-1);
         }
@@ -122,7 +181,7 @@ public class PlayerController : MonoBehaviour
         {
             wallJumpingCounter -= Time.deltaTime;
         }
-        if (Input.GetKeyDown(KeyCode.Space) && (isWallSliding || wallJumpingCounter > 0f))
+        if ((isWallSliding || wallJumpingCounter > 0f) && ConsumeJump())
         {
             isWallJumping = true;
             wallJumpingCounter = 0f;
@@ -146,7 +205,12 @@ public class PlayerController : MonoBehaviour
     }
     private void HandleJump()
     {
-        if (!Input.GetKeyDown(KeyCode.Space))
+        if (isWallSliding || isWallJumping)
+        {
+            return;
+        }
+
+        if (!ConsumeJump())
         {
             return;
         }
@@ -165,12 +229,12 @@ public class PlayerController : MonoBehaviour
     }
     private void OnCollisionEnter2D(Collision2D other)
     {
-        EvaluateCollisionContacts(other, true);
+        EvaluateCollisionContacts(other);
     }
 
     private void OnCollisionStay2D(Collision2D other)
     {
-        EvaluateCollisionContacts(other, false);
+        EvaluateCollisionContacts(other);
     }
 
     private void OnCollisionExit2D(Collision2D other)
@@ -179,8 +243,9 @@ public class PlayerController : MonoBehaviour
         isTouchingWall = false;
     }
 
-    private void EvaluateCollisionContacts(Collision2D collision, bool isEnter)
+    private void EvaluateCollisionContacts(Collision2D collision)
     {
+        bool wasGrounded = isGrounded;
         bool foundGround = false;
         bool foundWall = false;
 
@@ -188,7 +253,10 @@ public class PlayerController : MonoBehaviour
         {
             Vector2 normal = contact.normal;
 
-            if (normal.y > 0.6f)
+            bool isFootContact = contact.point.y < transform.position.y - 0.05f;
+            bool isLandingOrStanding = rb == null || rb.velocity.y <= 0.1f;
+
+            if (normal.y > 0.6f && isFootContact && isLandingOrStanding)
             {
                 foundGround = true;
             }
@@ -200,9 +268,16 @@ public class PlayerController : MonoBehaviour
         }
 
         isGrounded = foundGround;
-        if (isGrounded && isEnter)
+        if (isGrounded && !wasGrounded)
         {
             jumpCount = 0;
+            animator.SetBool("DoubleJump", false);
+
+            if (isWallJumping)
+            {
+                isWallJumping = false;
+                CancelInvoke(nameof(StopWallJumping));
+            }
         }
 
         isTouchingWall = foundWall && !isGrounded;
@@ -222,43 +297,102 @@ public class PlayerController : MonoBehaviour
         speed = newSpeed;
         jumpForce = newJumpForce;
         maxJump = Mathf.Clamp(newMaxJump, 1, 3);
+
+        if (!isMushroomBuffActive)
+        {
+            baseSpeed = speed;
+            baseJumpForce = jumpForce;
+        }
     }
 
-    public void SetHorizontalVelocity(float xVelocity)
+    public void ApplyMushroomBuff(float duration, float speedMultiplier, float jumpMultiplier, float scaleMultiplier)
     {
-        if (rb == null)
+        if (duration <= 0f)
         {
             return;
         }
 
+        if (isMushroomBuffActive)
+        {
+            if (mushroomBuffRoutine != null)
+            {
+                StopCoroutine(mushroomBuffRoutine);
+            }
+        }
+        else
+        {
+            baseSpeed = speed;
+            baseJumpForce = jumpForce;
+            baseScale = transform.localScale;
+        }
+
+        isMushroomBuffActive = true;
+        speed = baseSpeed * Mathf.Max(0.1f, speedMultiplier);
+        jumpForce = baseJumpForce * Mathf.Max(0.1f, jumpMultiplier);
+        transform.localScale = baseScale * Mathf.Max(0.1f, scaleMultiplier);
+
+        mushroomBuffRoutine = StartCoroutine(MushroomBuffCountdown(duration));
+    }
+
+    private IEnumerator MushroomBuffCountdown(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+
+        speed = baseSpeed;
+        jumpForce = baseJumpForce;
+        transform.localScale = baseScale;
+        isMushroomBuffActive = false;
+        mushroomBuffRoutine = null;
+    }
+
+    public void SetHorizontalVelocity(float xVelocity)
+    {
         rb.velocity = new Vector2(xVelocity, rb.velocity.y);
     }
 
     public void AddImpulse(Vector2 impulse)
     {
-        if (rb == null)
-        {
-            return;
-        }
-
         rb.AddForce(impulse, ForceMode2D.Impulse);
     }
 
     public void BeginDash(float xVelocity, float duration)
     {
-        if (rb == null)
-        {
-            return;
-        }
-
         dashEndTime = Mathf.Max(dashEndTime, Time.time + Mathf.Max(0f, duration));
         rb.velocity = new Vector2(xVelocity, rb.velocity.y);
     }
 
     public void SetStartCheckpoint(Transform checkpoint)
     {
+        bool wasKinematic = rb.isKinematic;
         rb.isKinematic = true;
         transform.position = checkpoint.position;
-        //rb.isKinematic = false;
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+        rb.isKinematic = wasKinematic;
+    }
+
+    public void SetMobileInputEnabled(bool enabled)
+    {
+        forceMobileInput = enabled;
+    }
+
+    public void MobileMoveLeftDown()
+    {
+        mobileMoveInput = -1f;
+    }
+
+    public void MobileMoveRightDown()
+    {
+        mobileMoveInput = 1f;
+    }
+
+    public void MobileMoveRelease()
+    {
+        mobileMoveInput = 0f;
+    }
+
+    public void MobileJump()
+    {
+        jumpQueued = true;
     }
 }

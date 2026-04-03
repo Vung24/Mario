@@ -8,14 +8,17 @@ public class BoxController : MonoBehaviour
     {
         Normal_Box,
         Secret_Box,
+        Secret_Box2,
         Lock_Box
     }
     [SerializeField] private BoxType myType;
     [SerializeField] private Sprite normalBoxSprite;
     [SerializeField] private Sprite secretBoxSprite;
+    [SerializeField] private Sprite secretBoxSprite2;
     [SerializeField] private Sprite lockBoxSprite;
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private GameObject objCoinEarn;
+    [SerializeField] private GameObject mushroom;
     [SerializeField] private float bumpDistance = 0.2f;
     [SerializeField] private float bumpDuration = 0.08f;
     private Animator animator;
@@ -29,7 +32,6 @@ public class BoxController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // Disable animator transform driving to prevent all boxes snapping to clip-authored positions.
         if (animator != null)
         {
             animator.enabled = false;
@@ -45,6 +47,9 @@ public class BoxController : MonoBehaviour
                 break;
             case BoxType.Lock_Box:
                 spriteRenderer.sprite = lockBoxSprite;
+                break;
+            case BoxType.Secret_Box2:
+                spriteRenderer.sprite = secretBoxSprite2;
                 break;
         }
     }
@@ -64,6 +69,7 @@ public class BoxController : MonoBehaviour
                 {
                     StartCoroutine(BumpBox());
                 }
+                if (objCoinEarn == null) return;
                 objCoinEarn.SetActive(true);
                 spriteRenderer.sprite = lockBoxSprite;
                 StartCoroutine(IEDeativeCoin());
@@ -71,7 +77,22 @@ public class BoxController : MonoBehaviour
                 IEnumerator IEDeativeCoin()
                 {
                     yield return new WaitForSeconds(0.83f);
-                    objCoinEarn.SetActive(false); 
+                    objCoinEarn.SetActive(false);
+                }
+                break;
+            case BoxType.Secret_Box2:
+                if (!isBumping)
+                {
+                    StartCoroutine(BumpBox());
+                }
+                if (mushroom == null) return;
+                mushroom.SetActive(true);
+                spriteRenderer.sprite = lockBoxSprite;
+                StartCoroutine(IEDeativeMushroom());
+                myType = BoxType.Lock_Box;
+                IEnumerator IEDeativeMushroom()
+                {
+                    yield return new WaitForSeconds(0.83f);
                 }
                 break;
             case BoxType.Lock_Box:

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8967829264143857694}
   - component: {fileID: 1036546726395012690}
   - component: {fileID: 2773845336979510330}
+  - component: {fileID: 6138669030069950804}
   m_Layer: 0
   m_Name: Snail
   m_TagString: Snail
@@ -170,6 +171,33 @@ MonoBehaviour:
   pointA: {fileID: 8447545985297273992}
   pointB: {fileID: 1008056305155379069}
   speedSnail: 1
+--- !u!50 &6138669030069950804
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17125001184345173}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 5
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4
 --- !u!1 &3323405763979449480
 GameObject:
   m_ObjectHideFlags: 0

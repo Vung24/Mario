@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
+    public static LevelManager Instance { get; private set; }
     private const string CurrentLevelKey = "CurrentLevelIndex";
 
     [Header("Level Settings")]
@@ -12,7 +13,16 @@ public class LevelManager : MonoBehaviour
     private Temp_LevelController curLevel;
 
     public Temp_LevelController[] levelControllers;
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
+        Instance = this;
+    }
     void Start()
     {
         int availableLevelCount = GetAvailableLevelCount();
@@ -41,16 +51,10 @@ public class LevelManager : MonoBehaviour
         PlayerPrefs.Save();
 
         GameManager gameManager = GameManager.Instance;
-        if (gameManager != null)
-        {
-            gameManager.ResetLevelUIState();
-        }
 
-        if (currentLevel != null)
-        {
-            Destroy(currentLevel);
-        }
+        gameManager.ResetLevelUIState();
 
+        Destroy(currentLevel);
         if (!InstantiateLevel(levelIndex))
         {
             return;

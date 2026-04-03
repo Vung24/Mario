@@ -6,7 +6,7 @@ public class PlantEnemy : MonoBehaviour, IEnemy
 {
     [SerializeField] private float fireRate = 1f;
     [SerializeField] private Transform shootPoint;
-    private float detectionRange = 10f;
+    private float detectionRange = 15f;
     private float hitAnimLeadTime = 0.1f;
     private float hitUpDistance = 0.2f;
     private float hitUpDuration = 0.08f;
@@ -23,11 +23,6 @@ public class PlantEnemy : MonoBehaviour, IEnemy
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-
-        if (Bullet.Instance == null)
-        {
-            Debug.LogError("PlantEnemy: Bullet singleton is missing. Add one Bullet manager in scene.", this);
-        }
         fireTimer = fireRate;
         player = GameObject.FindGameObjectWithTag("Player");
     }
@@ -78,11 +73,6 @@ public class PlantEnemy : MonoBehaviour, IEnemy
     private void ShootBullet()
     {
         Bullet bulletInstance = Bullet.Instance;
-        if (bulletInstance == null)
-        {
-            return;
-        }
-
         Vector3 shootDirection = Vector3.left;
         WaitForOneSecond();
         bulletInstance.GetBullet(

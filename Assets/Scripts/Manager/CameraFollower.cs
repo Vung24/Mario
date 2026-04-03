@@ -7,7 +7,7 @@ public class CameraFollower : MonoBehaviour
 {
     public static CameraFollower Instance { get; private set; }
     private CinemachineVirtualCamera virtualCamera;
-    private Transform pendingTarget;
+    private Transform Target;
 
     void Awake()
     {
@@ -18,19 +18,19 @@ public class CameraFollower : MonoBehaviour
         }
 
         Instance = this;
-        EnsureVirtualCamera();
+        VirtualCamera();
     }
 
     void Start()
     {
-        EnsureVirtualCamera();
+        VirtualCamera();
         ApplyPendingTarget();
     }
 
     public void SetFollowTarget(Transform target)
     {
-        pendingTarget = target;
-        EnsureVirtualCamera();
+        Target = target;
+        VirtualCamera();
 
         if (virtualCamera != null)
         {
@@ -39,13 +39,8 @@ public class CameraFollower : MonoBehaviour
         }
     }
 
-    private void EnsureVirtualCamera()
+    private void VirtualCamera()
     {
-        if (virtualCamera != null)
-        {
-            return;
-        }
-
         virtualCamera = GetComponent<CinemachineVirtualCamera>();
         if (virtualCamera == null)
         {
@@ -55,11 +50,11 @@ public class CameraFollower : MonoBehaviour
 
     private void ApplyPendingTarget()
     {
-        if (pendingTarget == null)
+        if (Target == null)
         {
             return;
         }
 
-        SetFollowTarget(pendingTarget);
+        SetFollowTarget(Target);
     }
 }

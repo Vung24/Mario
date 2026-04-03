@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class PlayerCollision : MonoBehaviour
 {
+    public static PlayerCollision Instance { get; private set; }
     private Animator animator;
     private Rigidbody2D rb;
     private PlayerSkill playerSkill;
@@ -14,6 +15,16 @@ public class PlayerCollision : MonoBehaviour
     private float downwardHitVelocityThreshold = -0.05f;
     private float boxCenterYOffsetTolerance = 0.02f;
 
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -29,10 +40,11 @@ public class PlayerCollision : MonoBehaviour
         }
         else if (other.gameObject.CompareTag("Traps"))
         {
-            TriggerPlayerDefeat();
+            TriggerPlayer();
         }
-        else if(other.gameObject.CompareTag("Enemy")){
-            TriggerPlayerDefeat();
+        else if (other.gameObject.CompareTag("Enemy"))
+        {
+            TriggerPlayer();
         }
         else if (other.gameObject.CompareTag("Finish"))
         {
@@ -67,7 +79,7 @@ public class PlayerCollision : MonoBehaviour
             return;
         }
 
-        TriggerPlayerDefeat();
+        TriggerPlayer();
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -91,7 +103,7 @@ public class PlayerCollision : MonoBehaviour
     {
         if (box == null)
             return;
-        
+
         int boxId = collision.gameObject.GetInstanceID();
         if (triggeredBoxIds.Contains(boxId))
         {
@@ -134,7 +146,7 @@ public class PlayerCollision : MonoBehaviour
         return false;
     }
 
-    private void HitEnemy(Collision2D collision, IEnemy enemy)
+    public void HitEnemy(Collision2D collision, IEnemy enemy)
     {
         MonoBehaviour enemyBehaviour = enemy as MonoBehaviour;
         int enemyId = enemyBehaviour != null
@@ -146,14 +158,26 @@ public class PlayerCollision : MonoBehaviour
             return;
         }
 
-        if (HitTopEnemy(collision))
+        bool hitTop = HitTopEnemy(collision);
+        bool hitSnailBehind = HitSnailFromBehind(enemy);
+
+        if (hitTop || hitSnailBehind)
         {
             triggeredEnemyIds.Add(enemyId);
-            enemy.OnHitByPlayer();
+
+            SnailEnemy snailEnemy = enemy as SnailEnemy;
+            if (hitSnailBehind && snailEnemy != null)
+            {
+                snailEnemy.OnHitByPlayerFromBehind();
+            }
+            else
+            {
+                enemy.OnHitByPlayer();
+            }
             return;
         }
 
-        TriggerPlayerDefeat();
+        TriggerPlayer();
     }
 
     private bool HitTopEnemy(Collision2D collision)
@@ -183,18 +207,24 @@ public class PlayerCollision : MonoBehaviour
         return false;
     }
 
-    private void TriggerPlayerDefeat()
+    private bool HitSnailFromBehind(IEnemy enemy)
+    {
+        SnailEnemy snailEnemy = enemy as SnailEnemy;
+        if (snailEnemy == null)
+        {
+            return false;
+        }
+
+        return snailEnemy.CanBeHitFromBehind(transform);
+    }
+
+    private void TriggerPlayer()
     {
         if (playerSkill != null && playerSkill.GuyImmortal())
         {
             return;
         }
-
-        if (animator != null)
-        {
-            animator.SetTrigger("Hit");
-        }
-
+        animator.SetTrigger("Hit");
         GameManager.Instance?.GameOver();
     }
 

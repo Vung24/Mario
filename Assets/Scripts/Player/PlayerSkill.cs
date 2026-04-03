@@ -34,6 +34,10 @@ public class PlayerSkill : MonoBehaviour
     private float defaultGravityScale;
     private float nextdashTime;
     private bool guyIsImmortal;
+    private bool mobileDashQueued;
+    private bool mobileGlidePressed;
+    private float mobileGlideTapUntil;
+    private float mobileGlideTapDuration = 0.3f;
 
     void Start()
     {
@@ -87,7 +91,10 @@ public class PlayerSkill : MonoBehaviour
     }
     private void HandleMaskDudeSkill()
     {
-        if (!Input.GetKeyDown(KeyCode.E) || Time.time < nextdashTime)
+        bool dashRequested = Input.GetKeyDown(KeyCode.E) || mobileDashQueued;
+        mobileDashQueued = false;
+
+        if (!dashRequested || Time.time < nextdashTime)
         {
             return;
         }
@@ -104,7 +111,8 @@ public class PlayerSkill : MonoBehaviour
             return;
         }
 
-        bool canGlide = !playerController.IsGrounded && rb.velocity.y < 0f && Input.GetKey(pinkManGlideKey) && Time.time >= nextGlideTime;
+        bool glideRequested = Input.GetKey(pinkManGlideKey) || mobileGlidePressed || Time.time < mobileGlideTapUntil;
+        bool canGlide = !playerController.IsGrounded && rb.velocity.y < 0f && glideRequested && Time.time >= nextGlideTime;
         rb.gravityScale = canGlide ? pinkManGlideGravityScale : defaultGravityScale;
 
         if (isGlidingLastFrame && !canGlide)
@@ -132,11 +140,6 @@ public class PlayerSkill : MonoBehaviour
 
     private void ResetGravity()
     {
-        if (rb == null)
-        {
-            return;
-        }
-
         rb.gravityScale = defaultGravityScale;
     }
 
@@ -182,5 +185,76 @@ public class PlayerSkill : MonoBehaviour
 
         guyIsImmortal = false;
         playerController.ConfigureStats(playerController.speed, playerController.jumpForce, DefaultMaxJump);
+    }
+
+    public bool HasActiveSkillButton()
+    {
+        return activeCharacter == CharacterType.MaskDude || activeCharacter == CharacterType.PinkMan;
+    }
+
+    public bool SkillUsesHoldInput()
+    {
+        return activeCharacter == CharacterType.PinkMan;
+    }
+
+    public void MobileSkillDown()
+    {
+        if (activeCharacter == CharacterType.MaskDude)
+        {
+            mobileDashQueued = true;
+            return;
+        }
+
+        if (activeCharacter == CharacterType.PinkMan)
+        {
+            mobileGlidePressed = true;
+            mobileGlideTapUntil = Time.time + mobileGlideTapDuration;
+        }
+    }
+
+    public void MobileSkillUp()
+    {
+        mobileGlidePressed = false;
+    }
+
+    public void MobileSkillTap()
+    {
+        if (activeCharacter == CharacterType.MaskDude)
+        {
+            mobileDashQueued = true;
+            return;
+        }
+
+        if (activeCharacter == CharacterType.PinkMan)
+        {
+            mobileGlideTapUntil = Time.time + mobileGlideTapDuration;
+        }
+    }
+
+    public float GetSkillCooldownNormalized()
+    {
+        if (activeCharacter == CharacterType.MaskDude)
+        {
+            if (dashCooldown <= 0f)
+            {
+                return 0f;
+            }
+
+            float remaining = Mathf.Max(0f, nextdashTime - Time.time);
+            return Mathf.Clamp01(remaining / dashCooldown);
+        }
+
+        if (activeCharacter == CharacterType.PinkMan)
+        {
+            if (pinkCooldown <= 0f)
+            {
+                return 0f;
+            }
+
+            float remaining = Mathf.Max(0f, nextGlideTime - Time.time);
+            return Mathf.Clamp01(remaining / pinkCooldown);
+        }
+
+        return 0f;
     }
 }

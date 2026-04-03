@@ -11,11 +11,11 @@ GameObject:
   - component: {fileID: 9200649724878794458}
   - component: {fileID: 8429473129303319133}
   - component: {fileID: 6793848420838090953}
-  - component: {fileID: 2143007411068106178}
   - component: {fileID: 4982483843535114149}
   - component: {fileID: 4588245579755215705}
   - component: {fileID: 9002501683411390986}
   - component: {fileID: 2241820653732466635}
+  - component: {fileID: 1140070445702633203}
   m_Layer: 0
   m_Name: NinjaFrog
   m_TagString: Player
@@ -111,51 +111,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!61 &2143007411068106178
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4808032258723535438}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 6200000, guid: bde9307904504844aadc2d49f097895d, type: 2}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: -0.024550676, y: -0.24059764}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2, y: 2}
-    newSize: {x: 2, y: 2}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 1.3813205, y: 1.5188048}
-  m_EdgeRadius: 0
 --- !u!50 &4982483843535114149
 Rigidbody2D:
   serializedVersion: 4
@@ -195,8 +150,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c8683f7cc6b00a4ca2ba81416c7b205, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundNormalThreshold: 0.6
-  wallNormal: 0.6
+  speed: 8
+  jumpForce: 17
+  maxJump: 2
+  forceMobileInput: 0
+  wallCheck: {fileID: 0}
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &9002501683411390986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -221,20 +182,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aacadbac05ffda245b43ab2c467473fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeCharacter: 0
-  maskDudeSpeed: 8
-  maskDudeJumpForce: 16
-  maskDudeMaxJump: 2
-  maskDudeDashSpeed: 18
-  maskDudeDashCooldown: 1
-  ninjaFrogSpeed: 11
-  ninjaFrogJumpForce: 15
-  ninjaFrogMaxJump: 2
-  pinkManSpeed: 7
-  pinkManJumpForce: 18
-  pinkManMaxJump: 2
-  pinkManGlideGravityScale: 0.35
-  pinkManGlideKey: 304
-  vitualGuySpeed: 10
-  vitualGuyJumpForce: 16
-  vitualGuyMaxJump: 2
+  activeCharacter: 1
+--- !u!70 &1140070445702633203
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4808032258723535438}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.022385387, y: -0.19400737}
+  m_Size: {x: 1.4179791, y: 1.6119863}
+  m_Direction: 0

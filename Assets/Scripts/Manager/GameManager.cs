@@ -160,12 +160,12 @@ public class GameManager : MonoBehaviour
         GameObject spawnedPlayer = Instantiate(selectedPrefab, startCheckpoint.position, Quaternion.identity);
         player = spawnedPlayer.transform;
 
-        if (cameraFollower == null)
-        {
-            cameraFollower = CameraFollower.Instance != null
-                ? CameraFollower.Instance
-                : FindObjectOfType<CameraFollower>();
-        }
+        // if (cameraFollower == null)
+        // {
+        //     cameraFollower = CameraFollower.Instance != null
+        //         ? CameraFollower.Instance
+        //         : FindObjectOfType<CameraFollower>();
+        // }
 
         if (cameraFollower != null)
         {

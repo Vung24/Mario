@@ -13,6 +13,7 @@ TagManager:
   - Slime
   - Plant
   - Snail
+  - Mushroom
   layers:
   - Default
   - TransparentFX

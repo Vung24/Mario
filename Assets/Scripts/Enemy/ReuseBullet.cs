@@ -6,7 +6,7 @@ using UnityEngine.Pool;
 public class ReuseBullet : MonoBehaviour
 {
     private Vector3 spawnPosition; 
-    [SerializeField] private float maxDistance = 10f; 
+    private float maxDistance = 15f; 
 
     public void OnBulletSpawned(Vector3 position)
     {

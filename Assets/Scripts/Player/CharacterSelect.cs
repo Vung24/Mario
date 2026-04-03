@@ -23,7 +23,7 @@ public class CharacterSelect : MonoBehaviour
     {
         PlayerPrefs.SetInt(SelectedCharacterKey, selectedCharacterIndex);
         PlayerPrefs.Save();
-        SceneManager.LoadScene("MainScene");
+        SceneManager.LoadScene("SelectionLevel");
     }
     public void OnPrewBtnClick()
     {
