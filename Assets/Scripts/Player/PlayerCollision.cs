@@ -146,40 +146,36 @@ public class PlayerCollision : MonoBehaviour
         return false;
     }
 
-    public void HitEnemy(Collision2D collision, IEnemy enemy)
+public void HitEnemy(Collision2D collision, IEnemy enemy)
+{
+    MonoBehaviour enemyBehaviour = enemy as MonoBehaviour;
+    int enemyId = enemyBehaviour != null
+        ? enemyBehaviour.gameObject.GetInstanceID()
+        : collision.gameObject.GetInstanceID();
+
+    if (triggeredEnemyIds.Contains(enemyId))
+        return;
+
+    bool hitTop = HitTopEnemy(collision);
+    SnailEnemy snailEnemy = enemy as SnailEnemy;
+
+    if (hitTop)
     {
-        MonoBehaviour enemyBehaviour = enemy as MonoBehaviour;
-        int enemyId = enemyBehaviour != null
-            ? enemyBehaviour.gameObject.GetInstanceID()
-            : collision.gameObject.GetInstanceID();
+        triggeredEnemyIds.Add(enemyId);
 
-        if (triggeredEnemyIds.Contains(enemyId))
+        if (snailEnemy != null)
         {
-            return;
+            snailEnemy.OnHitByPlayer();
         }
-
-        bool hitTop = HitTopEnemy(collision);
-        bool hitSnailBehind = HitSnailFromBehind(enemy);
-
-        if (hitTop || hitSnailBehind)
+        else
         {
-            triggeredEnemyIds.Add(enemyId);
-
-            SnailEnemy snailEnemy = enemy as SnailEnemy;
-            if (hitSnailBehind && snailEnemy != null)
-            {
-                snailEnemy.OnHitByPlayerFromBehind();
-            }
-            else
-            {
-                enemy.OnHitByPlayer();
-            }
-            return;
+            enemy.OnHitByPlayer();
         }
-
-        TriggerPlayer();
+        return;
     }
 
+    TriggerPlayer();
+}
     private bool HitTopEnemy(Collision2D collision)
     {
         bool playerIsAboveEnemy = transform.position.y > (collision.transform.position.y + boxCenterYOffsetTolerance);
@@ -207,17 +203,6 @@ public class PlayerCollision : MonoBehaviour
         return false;
     }
 
-    private bool HitSnailFromBehind(IEnemy enemy)
-    {
-        SnailEnemy snailEnemy = enemy as SnailEnemy;
-        if (snailEnemy == null)
-        {
-            return false;
-        }
-
-        return snailEnemy.CanBeHitFromBehind(transform);
-    }
-
     private void TriggerPlayer()
     {
         if (playerSkill != null && playerSkill.GuyImmortal())
@@ -226,6 +211,11 @@ public class PlayerCollision : MonoBehaviour
         }
         animator.SetTrigger("Hit");
         GameManager.Instance?.GameOver();
+    }
+
+    public void OnHitByEnemy()
+    {
+        TriggerPlayer();
     }
 
 }

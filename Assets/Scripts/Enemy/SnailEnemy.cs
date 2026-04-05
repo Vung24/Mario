@@ -1,364 +1,217 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class SnailEnemy : MonoBehaviour, IEnemy
 {
     [SerializeField] private Transform pointA;
     [SerializeField] private Transform pointB;
-    [SerializeField] private float speedSnail = 1f;
-    [SerializeField] private float behindChaseSpeed = 7f;
-    [SerializeField] private float gravityScale = 5f;
-    private float behindChaseDuration = 3f;
-    private bool faceMovementDirection = true;
-    private bool invertFacing = false;
-    private SpriteRenderer spriteRenderer;
 
-    private Vector3 target;
-    private Vector3 pointAPosition;
-    private Vector3 pointBPosition;
-    private Animator animator;
+    [SerializeField] private float patrolSpeed = 1f;
+    [SerializeField] private float shellSlideSpeed = 25f;
+    [SerializeField] private float secondStompSlideSpeed = 20f;
+    [SerializeField] private float shellRecoverTime = 15f;
+    [SerializeField] private float wallNormalThreshold = 0.5f;
+    [SerializeField] private float shellDirectionFlipCooldown = 0.05f;
+    [SerializeField] private float maxSlideDistance = 50f;
+
     private Rigidbody2D rb;
+    private Animator animator;
+    private Vector3 targetPosA;
+    private Vector3 targetPosB;
+    private Vector3 currentTargetPos;
     private bool movingToB = true;
-    private bool isShellMode = false;
-    private bool isChasingPlayer = false;
-    private bool isDestroying = false;
-    private Transform chaseTarget;
-    private Transform lastBehindAttacker;
-    private Coroutine chaseDestroyRoutine;
-    private float backHitToleranceX = 0.08f;
-    private float hitAnimLeadTime = 0.1f;
-    private float hitUpDistance = 0.25f;
-    private float hitUpDuration = 0.08f;
-    private float fallDistance = 2.5f;
-    private float fallDuration = 0.5f;
 
+    private bool isInsideShell = false;
+    private float shellExitTime = 0f;
 
-    void Start()
+    private bool isShellSliding = false;
+    private float shellSlideDirection = 1f;
+    private float currentShellSlideSpeed = 0f;
+    private float lastShellDirectionFlipTime = -999f;
+    private float accumulativeSlideDistance = 0f;
+    private int hitCount = 0;
+
+    private void Start()
     {
-        animator = GetComponentInChildren<Animator>();
+        shellSlideSpeed = 25f;
+        secondStompSlideSpeed = 20f;
+        
+        animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        targetPosA = pointA.position;
+        targetPosB = pointB.position;
+        currentTargetPos = targetPosB;
+        currentShellSlideSpeed = shellSlideSpeed;
+    }
 
-        if (rb != null)
-        {
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.gravityScale = 0f; // Sẽ set thành gravityScale khi đuổi theo
-            rb.freezeRotation = true;
-        }
+    private void Update()
+    {
+        AnimationUpdate();
 
-        if (pointA == null || pointB == null)
+        if (isShellSliding)
         {
-            enabled = false;
+            rb.velocity = new Vector2(shellSlideDirection * currentShellSlideSpeed, rb.velocity.y);
+
+            accumulativeSlideDistance += Mathf.Abs(currentShellSlideSpeed * Time.deltaTime);
+            if (accumulativeSlideDistance >= maxSlideDistance)
+            {
+                gameObject.SetActive(false);
+                Destroy(gameObject);
+                return;
+            }
+
             return;
         }
 
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        pointAPosition = pointA.position;
-        pointBPosition = pointB.position;
-        target = pointBPosition;
-        UpdateFacing();
-    }
-
-    void Update()
-    {
-        UpdateAnimation();
-    }
-
-    private void FixedUpdate()
-    {
-        if (isDestroying)
+        if (isInsideShell)
         {
+            shellExitTime -= Time.deltaTime;
+            if (shellExitTime <= 0)
+            {
+                isInsideShell = false;
+            }
             return;
         }
 
-        if (isChasingPlayer)
+        Patrol();
+    }
+
+    private void Patrol()
+    {
+        float distance = Vector2.Distance(transform.position, currentTargetPos);
+        if (distance < 0.5f)
         {
-            ChasePlayer();
-            return;
+            ChangeTarget();
         }
 
-        if (!isShellMode)
+        Vector2 direction = (currentTargetPos - transform.position).normalized;
+
+        transform.Translate(new Vector2(direction.x * patrolSpeed * Time.deltaTime, 0), Space.World);
+
+        if (direction.x > 0.1f)
         {
-            Move();
+            transform.localScale = new Vector3(-1, 1, 1);
+        }
+        else if (direction.x < -0.1f)
+        {
+            transform.localScale = new Vector3(1, 1, 1);
         }
     }
 
-    private void ChasePlayer()
+    private void ChangeTarget()
     {
-        Transform resolvedTarget = ResolveChaseTarget();
-        if (resolvedTarget != null)
+        if (movingToB)
         {
-            chaseTarget = resolvedTarget;
-            target = chaseTarget.position;
-        }
-
-        Vector2 currentPos = rb != null ? rb.position : (Vector2)transform.position;
-        Vector2 desiredPos = chaseTarget != null
-            ? (Vector2)chaseTarget.position
-            : currentPos + (IsFacingRight() ? Vector2.right : Vector2.left);
-        Vector2 nextPos = Vector2.MoveTowards(currentPos, desiredPos, behindChaseSpeed * Time.fixedDeltaTime);
-
-        if (rb != null)
-        {
-            // Áp dụng gravity và chỉ di chuyển theo trục X
-            Vector2 velocity = rb.velocity;
-            velocity.x = (nextPos.x - currentPos.x) / Time.fixedDeltaTime;
-            rb.velocity = velocity;
-            // Gravity sẽ được áp dụng tự động từ rigidbody
-            rb.gravityScale = gravityScale;
+            currentTargetPos = targetPosA;
+            movingToB = false;
         }
         else
         {
-            transform.position = nextPos;
+            currentTargetPos = targetPosB;
+            movingToB = true;
         }
-
-        if (faceMovementDirection)
-        {
-            UpdateFacing();
-        }
+        // Reset hit count khi đổi mục tiêu
+        hitCount = 0;
     }
 
-    private void Move()
-    {
-        if (rb != null)
-        {
-            rb.gravityScale = 0f; // Tắt gravity khi đi tuần tra bình thường
-        }
-
-        Vector2 currentPos = rb != null ? rb.position : (Vector2)transform.position;
-        Vector2 nextPos = Vector2.MoveTowards(currentPos, (Vector2)target, speedSnail * Time.fixedDeltaTime);
-
-        if (rb != null)
-        {
-            rb.MovePosition(nextPos);
-        }
-        else
-        {
-            transform.position = nextPos;
-        }
-
-        if ((nextPos - (Vector2)target).sqrMagnitude <= 0.0001f)
-        {
-            movingToB = !movingToB;
-            target = movingToB ? pointBPosition : pointAPosition;
-        }
-
-        if (faceMovementDirection)
-        {
-            UpdateFacing();
-        }
-    }
-    private void UpdateAnimation()
-    {
-        if (animator == null)
-        {
-            return;
-        }
-
-        float currentX = rb != null ? rb.position.x : transform.position.x;
-        float value = (isShellMode || isDestroying) ? 0f : Mathf.Abs(target.x - currentX);
-        animator.SetFloat("Run", value);
-    }
-    private void UpdateFacing()
-    {
-        float currentX = rb != null ? rb.position.x : transform.position.x;
-        float directionX = target.x - currentX;
-
-        if (Mathf.Abs(directionX) < 0.0001f)
-        {
-            return;
-        }
-
-        bool movingLeft = directionX < 0f;
-        bool shouldFaceRight = invertFacing ? !movingLeft : movingLeft;
-
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.flipX = !shouldFaceRight;
-            return;
-        }
-
-        Vector3 scale = transform.localScale;
-        float absX = Mathf.Abs(scale.x);
-        scale.x = shouldFaceRight ? absX : -absX;
-        transform.localScale = scale;
-    }
-    private void ShellMode()
-    {
-        isShellMode = true;
-        animator.SetTrigger("OneHit");
-    }
     public void OnHitByPlayer()
     {
-        if (isDestroying)
-        {
-            return;
-        }
+        hitCount++;
 
-        if (!isShellMode)
+        if (hitCount == 1)
         {
-            ShellMode();
-            return;
+            isInsideShell = true;
+            shellExitTime = shellRecoverTime;
+            currentShellSlideSpeed = shellSlideSpeed;
+            accumulativeSlideDistance = 0f;
+            rb.velocity = Vector2.zero;
+            animator.SetTrigger("OneHit");
         }
-
-        isDestroying = true;
-        StartCoroutine(PlayDestroyEffect(false));
+        else if (hitCount >= 2)
+        {
+            isInsideShell = true;
+            isShellSliding = true;
+            shellSlideDirection = 1f;
+            currentShellSlideSpeed = secondStompSlideSpeed;
+            shellExitTime = shellRecoverTime;
+            hitCount = 0;
+            currentTargetPos = targetPosB;
+            movingToB = true;
+            rb.velocity = Vector2.zero;
+        }
     }
 
-    public void OnHitByPlayerFromBehind()
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (isDestroying)
+        if (isShellSliding)
         {
-            return;
-        }
+            IEnemy enemy = collision.gameObject.GetComponentInParent<IEnemy>();
+            if (enemy != null && !(enemy is SnailEnemy snailEnemy && snailEnemy == this))
+            {
+                MonoBehaviour enemyBehaviour = enemy as MonoBehaviour;
+                if (enemyBehaviour != null)
+                {
+                    Destroy(enemyBehaviour.gameObject);
+                }
+                return;
+            }
 
-        if (!isShellMode)
-        {
-            ShellMode();
-        }
+            if (collision.gameObject.CompareTag("Player"))
+            {
+                if (IsPlayerStompingFromAbove(collision))
+                {
+                    return;
+                }
 
-        StartBehindChase();
+                PlayerCollision playerCollision = collision.gameObject.GetComponent<PlayerCollision>();
+                if (playerCollision != null)
+                {
+                    playerCollision.OnHitByEnemy();
+                }
+                return;
+            }
+
+            if (ShouldReverseShellDirection(collision) && Time.time - lastShellDirectionFlipTime >= shellDirectionFlipCooldown)
+            {
+                shellSlideDirection *= -1f;
+                lastShellDirectionFlipTime = Time.time;
+            }
+        }
     }
 
-    private bool IsFacingRight()
+    private bool ShouldReverseShellDirection(Collision2D collision)
     {
-        if (spriteRenderer != null)
+        foreach (ContactPoint2D contact in collision.contacts)
         {
-            return !spriteRenderer.flipX;
+            float horizontal = Mathf.Abs(contact.normal.x);
+            float vertical = Mathf.Abs(contact.normal.y);
+            if (horizontal >= wallNormalThreshold && horizontal > vertical)
+            {
+                return true;
+            }
         }
 
-        return transform.localScale.x >= 0f;
+        return false;
     }
-    public bool CanBeHitFromBehind(Transform attacker)
+
+    private bool IsPlayerStompingFromAbove(Collision2D collision)
     {
-        if (!isShellMode || isDestroying || attacker == null)
+        const float yTolerance = 0.02f;
+        const float downVelocityThreshold = -0.05f;
+
+        bool playerIsAbove = collision.transform.position.y > (transform.position.y + yTolerance);
+        if (!playerIsAbove)
         {
             return false;
         }
 
+        Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
+        return playerRb != null && playerRb.velocity.y < downVelocityThreshold;
+    }
+
+    private void AnimationUpdate()
+    {
         float currentX = rb != null ? rb.position.x : transform.position.x;
-        float deltaX = attacker.position.x - currentX;
-        if (Mathf.Abs(deltaX) <= backHitToleranceX)
-        {
-            return false;
-        }
-
-        bool attackerOnRight = deltaX > 0f;
-        bool snailFacingRight = IsFacingRight();
-        bool canHit = snailFacingRight ? attackerOnRight : !attackerOnRight;
-        if (canHit)
-        {
-            lastBehindAttacker = attacker;
-        }
-
-        return canHit;
-    }
-
-    private void StartBehindChase()
-    {
-        isChasingPlayer = true;
-        chaseTarget = ResolveChaseTarget();
-
-        if (chaseDestroyRoutine != null)
-        {
-            StopCoroutine(chaseDestroyRoutine);
-        }
-
-        chaseDestroyRoutine = StartCoroutine(DestroyAfterBehindChase());
-    }
-
-    private Transform ResolveChaseTarget()
-    {
-        if (lastBehindAttacker != null)
-        {
-            return lastBehindAttacker;
-        }
-
-        if (chaseTarget != null)
-        {
-            return chaseTarget;
-        }
-
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        return playerObj != null ? playerObj.transform : null;
-    }
-
-    private IEnumerator DestroyAfterBehindChase()
-    {
-        if (behindChaseDuration > 0f)
-        {
-            yield return new WaitForSeconds(behindChaseDuration);
-        }
-
-        Destroy(gameObject);
-    }
-
-    private IEnumerator PlayDestroyEffect(bool useBehindHit)
-    {
-        Collider2D[] colliders = GetComponentsInChildren<Collider2D>();
-        for (int i = 0; i < colliders.Length; i++)
-        {
-            colliders[i].enabled = false;
-        }
-
-        if (animator != null)
-        {
-            animator.SetTrigger(useBehindHit ? "BehindHit" : "TwoHit");
-        }
-
-        if (hitAnimLeadTime > 0f)
-        {
-            yield return new WaitForSeconds(hitAnimLeadTime);
-        }
-
-
-        Vector3 startPos = rb != null ? (Vector3)rb.position : transform.position;
-        Vector3 upPos = startPos + Vector3.up * hitUpDistance;
-        Vector3 downPos = upPos + Vector3.down * fallDistance;
-
-        float t = 0f;
-        while (t < hitUpDuration)
-        {
-            t += Time.deltaTime;
-            float p = Mathf.Clamp01(t / hitUpDuration);
-            Vector3 pos = Vector3.Lerp(startPos, upPos, p);
-            if (rb != null)
-            {
-                rb.position = pos;
-            }
-            else
-            {
-                transform.position = pos;
-            }
-            yield return null;
-        }
-
-        t = 0f;
-        Color originalColor = spriteRenderer != null ? spriteRenderer.color : Color.white;
-        while (t < fallDuration)
-        {
-            t += Time.deltaTime;
-            float p = Mathf.Clamp01(t / fallDuration);
-            Vector3 pos = Vector3.Lerp(upPos, downPos, p);
-            if (rb != null)
-            {
-                rb.position = pos;
-            }
-            else
-            {
-                transform.position = pos;
-            }
-            if (spriteRenderer != null)
-            {
-                Color c = originalColor;
-                c.a = 1f - p;
-                spriteRenderer.color = c;
-            }
-
-            yield return null;
-        }
-
-        Destroy(gameObject);
+        float value = (isInsideShell || isShellSliding) ? 0f : Mathf.Abs(currentTargetPos.x - currentX);
+        animator.SetFloat("Run", value);
     }
 }
