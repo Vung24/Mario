@@ -43,6 +43,8 @@ public class GameManager : MonoBehaviour
     public void ResetLevelUIState()
     {
         hasWon = false;
+        player = null;
+        startCheckpoint = null;
         if (winPanel != null)
         {
             winPanel.SetActive(false);
@@ -62,7 +64,7 @@ public class GameManager : MonoBehaviour
         }
         if (gameOverPanel != null)
         {
-            StartCoroutine(WaitforSeconds());
+            StartCoroutine(ShowGameOver());
             gameOverPanel.SetActive(true);
             Time.timeScale = 0f;
         }
@@ -81,9 +83,11 @@ public class GameManager : MonoBehaviour
             Time.timeScale = 0f;
         }
     }
-    private IEnumerator WaitforSeconds()
+    private IEnumerator ShowGameOver()
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
+        gameOverPanel.SetActive(true);
+        Time.timeScale = 0f;
     }
     public void Home()
     {
@@ -94,31 +98,25 @@ public class GameManager : MonoBehaviour
     {
         startCheckpoint = checkpoint;
     }
-    private void PlayerPosition()
-    {
-        PlayerController playerController = FindObjectOfType<PlayerController>();
-        if (playerController != null)
-        {
-            player = playerController.transform;
-        }
-    }
     public void SpawnPlayer()
     {
-        if (startCheckpoint == null)
-            return;
-
-        SpawnSelectedCharacter();
-        if (player == null)
-        {
-            PlayerPosition();
-        }
-
-        if (player == null)
-        {
+        if (startCheckpoint == null){
             return;
         }
 
-        player.position = startCheckpoint.position;
+        SpawnPlayerAt(startCheckpoint.position);
+    }
+
+    public void SpawnPlayerAt(Vector3 spawnPosition)
+    {
+        SpawnSelectedCharacter(spawnPosition);
+
+        if (player == null)
+        {
+            return;
+        }
+
+        player.position = spawnPosition;
 
         Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
         if (playerRb != null)
@@ -128,45 +126,27 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void SpawnSelectedCharacter()
+    private void SpawnSelectedCharacter(Vector3 spawnPosition)
     {
-        PlayerPosition();
-
-        if (characterPrefabs == null || characterPrefabs.Length == 0)
-        {
-            return;
-        }
-
         int selectedIndex = PlayerPrefs.GetInt(SelectedCharacterKey, CharacterSelect.selectedCharacterIndex);
         if (selectedIndex < 0 || selectedIndex >= characterPrefabs.Length)
         {
             selectedIndex = 0;
         }
 
-        GameObject selectedPrefab = CharacterSelect.selectedCharacter != null
-            ? CharacterSelect.selectedCharacter
-            : characterPrefabs[selectedIndex];
+        GameObject selectedPrefab = characterPrefabs[selectedIndex];
 
-        if (selectedPrefab == null)
+        PlayerController[] existingPlayers = FindObjectsOfType<PlayerController>();
+        foreach (PlayerController existingPlayer in existingPlayers)
         {
-            return;
+            Destroy(existingPlayer.gameObject);
         }
+        player = null;
+        
+        GameObject spawnedPlayer = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
 
-        if (player != null)
-        {
-            Destroy(player.gameObject);
-        }
-
-        GameObject spawnedPlayer = Instantiate(selectedPrefab, startCheckpoint.position, Quaternion.identity);
         player = spawnedPlayer.transform;
-
-        // if (cameraFollower == null)
-        // {
-        //     cameraFollower = CameraFollower.Instance != null
-        //         ? CameraFollower.Instance
-        //         : FindObjectOfType<CameraFollower>();
-        // }
-
+        
         if (cameraFollower != null)
         {
             cameraFollower.SetFollowTarget(player);

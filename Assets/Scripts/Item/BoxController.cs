@@ -29,7 +29,6 @@ public class BoxController : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         if (animator != null)
@@ -45,11 +44,12 @@ public class BoxController : MonoBehaviour
             case BoxType.Secret_Box:
                 spriteRenderer.sprite = secretBoxSprite;
                 break;
-            case BoxType.Lock_Box:
-                spriteRenderer.sprite = lockBoxSprite;
-                break;
+
             case BoxType.Secret_Box2:
                 spriteRenderer.sprite = secretBoxSprite2;
+                break;
+            case BoxType.Lock_Box:
+                spriteRenderer.sprite = lockBoxSprite;
                 break;
         }
     }
@@ -96,6 +96,7 @@ public class BoxController : MonoBehaviour
                 }
                 break;
             case BoxType.Lock_Box:
+                spriteRenderer.sprite = lockBoxSprite;
                 break;
         }
     }

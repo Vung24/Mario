@@ -68,6 +68,7 @@ public class SnailEnemy : MonoBehaviour, IEnemy
             if (shellExitTime <= 0)
             {
                 isInsideShell = false;
+                animator.SetTrigger("ExitShell");
             }
             return;
         }
@@ -109,12 +110,14 @@ public class SnailEnemy : MonoBehaviour, IEnemy
             currentTargetPos = targetPosB;
             movingToB = true;
         }
-        // Reset hit count khi đổi mục tiêu
         hitCount = 0;
     }
 
     public void OnHitByPlayer()
     {
+        if (rb == null)
+            return;
+
         hitCount++;
 
         if (hitCount == 1)
@@ -169,7 +172,10 @@ public class SnailEnemy : MonoBehaviour, IEnemy
                 }
                 return;
             }
-
+            // if(collision.gameObject.CompareTag("DeathZone"))
+            // {
+            //     Destroy(gameObject);
+            // }
             if (ShouldReverseShellDirection(collision) && Time.time - lastShellDirectionFlipTime >= shellDirectionFlipCooldown)
             {
                 shellSlideDirection *= -1f;

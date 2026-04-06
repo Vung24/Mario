@@ -268,6 +268,7 @@ GameObject:
   - component: {fileID: 372994516502231813}
   - component: {fileID: 7787115419942956961}
   - component: {fileID: 202599934313219166}
+  - component: {fileID: 5612880977024597037}
   m_Layer: 0
   m_Name: Snail
   m_TagString: Snail
@@ -424,7 +425,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pointA: {fileID: 4392663957937365100}
   pointB: {fileID: 7325455497034032623}
-  speedSnail: 1
+  patrolSpeed: 1
+  shellSlideSpeed: 25
+  secondStompSlideSpeed: 20
+  shellRecoverTime: 15
+  wallNormalThreshold: 0.5
+  shellDirectionFlipCooldown: 0.05
+  maxSlideDistance: 50
+--- !u!50 &5612880977024597037
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 147245434498478285}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 5
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4
 --- !u!1 &266755822292804376
 GameObject:
   m_ObjectHideFlags: 0
@@ -587,6 +621,7 @@ Transform:
   - {fileID: 3772060496564847224}
   - {fileID: 8279896342681673019}
   - {fileID: 5465907856680778273}
+  - {fileID: 6799144782373673294}
   m_Father: {fileID: 5256533750041841892}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &420914076431013859
@@ -1147,7 +1182,7 @@ Transform:
   m_GameObject: {fileID: 993236907287123487}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -90.42783, z: 0}
+  m_LocalPosition: {x: 0, y: -90.3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2793,12 +2828,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11b05719c8db0554ca0da3c0a2a72ebf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myType: 2
+  myType: 3
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 6848615050428585504}
   objCoinEarn: {fileID: 8488924726236724369}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &8798831638114019807
@@ -38004,9 +38041,11 @@ MonoBehaviour:
   myType: 1
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 8197740748917444990}
   objCoinEarn: {fileID: 4216790442913874925}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &5107455495283091150
@@ -39084,12 +39123,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11b05719c8db0554ca0da3c0a2a72ebf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myType: 2
+  myType: 3
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 8764323282526516265}
   objCoinEarn: {fileID: 6009124077116300952}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &6679313566855334870
@@ -40404,9 +40445,11 @@ MonoBehaviour:
   myType: 1
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 3007810770517086025}
   objCoinEarn: {fileID: 7132811902624669146}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &2204663220945090809
@@ -41870,9 +41913,11 @@ MonoBehaviour:
   myType: 0
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 8386667654725196415}
   objCoinEarn: {fileID: 6820238128225204926}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &5030084114833760703
@@ -44298,9 +44343,11 @@ MonoBehaviour:
   myType: 0
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 6640975239921771672}
   objCoinEarn: {fileID: 8569308264777696345}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &7891543350222036824
@@ -44686,3 +44733,65 @@ Transform:
   m_Children: []
   m_Father: {fileID: 37044379087379641}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &6518420451047069655
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2502933818828000783}
+    m_Modifications:
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -17.24
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.64
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3279618067748317509, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+      propertyPath: m_Name
+      value: Secret_Box_Mushroom
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+--- !u!4 &6799144782373673294 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 301036365541805721, guid: 7ecbfe5e489bebd419f01ffcb73741b0, type: 3}
+  m_PrefabInstance: {fileID: 6518420451047069655}
+  m_PrefabAsset: {fileID: 0}

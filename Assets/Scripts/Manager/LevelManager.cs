@@ -11,8 +11,10 @@ public class LevelManager : MonoBehaviour
     private GameObject currentLevel;
 
     private Temp_LevelController curLevel;
+    private Coroutine loadLevelRoutine;
 
     public Temp_LevelController[] levelControllers;
+    
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -46,27 +48,78 @@ public class LevelManager : MonoBehaviour
             return;
         }
 
+        if (loadLevelRoutine != null)
+        {
+            StopCoroutine(loadLevelRoutine);
+            loadLevelRoutine = null;
+        }
+
+        loadLevelRoutine = StartCoroutine(LoadLevelRoutine(levelIndex));
+    }
+
+    private System.Collections.IEnumerator LoadLevelRoutine(int levelIndex)
+    {
         currentLevelIndex = levelIndex;
         PlayerPrefs.SetInt(CurrentLevelKey, currentLevelIndex);
         PlayerPrefs.Save();
 
         GameManager gameManager = GameManager.Instance;
+        if (gameManager == null)
+        {
+            Debug.LogError("GameManager instance is missing.");
+            yield break;
+        }
 
         gameManager.ResetLevelUIState();
 
-        Destroy(currentLevel);
+        if (currentLevel != null)
+        {
+            Destroy(currentLevel);
+            currentLevel = null;
+            curLevel = null;
+
+            yield return null;
+        }
+
         if (!InstantiateLevel(levelIndex))
         {
-            return;
+            Debug.LogError($"Failed to instantiate level {levelIndex}");
+            yield break;
         }
 
-        if (curLevel?.startPos == null || gameManager == null)
+        yield return null;
+
+        Transform resolvedStartPos = curLevel != null ? curLevel.ResolveStartPos() : null;
+        
+        // Fallback: if controller didn't resolve, search the whole level
+        if (resolvedStartPos == null && currentLevel != null)
         {
-            return;
+            Transform[] allTransforms = currentLevel.GetComponentsInChildren<Transform>(true);
+            foreach (Transform t in allTransforms)
+            {
+                if (t.name == "Start" || t.name == "CheckPoint" || t.name == "Checkpoint")
+                {
+                    resolvedStartPos = t;
+                    break;
+                }
+            }
+        }
+        
+        if (resolvedStartPos == null)
+        {
+            if (currentLevel != null)
+            {
+                resolvedStartPos = currentLevel.transform;
+            }
+            else
+            {
+                yield break;
+            }
         }
 
-        gameManager.startCheckpoint = curLevel.startPos;
-        gameManager.SpawnPlayer();
+        gameManager.SetStartCheckpoint(resolvedStartPos);
+        gameManager.SpawnPlayerAt(resolvedStartPos.position);
+        loadLevelRoutine = null;
     }
 
     public void NextLevel()

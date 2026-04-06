@@ -17,13 +17,16 @@ public class PlayerCollision : MonoBehaviour
 
     void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        // Player can be respawned between levels, so do not destroy the new instance.
         Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
     // Start is called before the first frame update
     void Start()

@@ -197868,9 +197868,11 @@ MonoBehaviour:
   myType: 1
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 1764517324723400333}
   objCoinEarn: {fileID: 8488732322764591615}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &7911391320351637007
@@ -198917,9 +198919,11 @@ MonoBehaviour:
   myType: 1
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 6810012820832059853}
   objCoinEarn: {fileID: 926391132981492167}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &8110337149510565919
@@ -249518,9 +249522,11 @@ MonoBehaviour:
   myType: 0
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 2626202512290673235}
   objCoinEarn: {fileID: 601434868915618168}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &8291577529761475982
@@ -249877,7 +249883,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6461eceb176ecd44b538f94befe158f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startPos: {fileID: 0}
+  startPos: {fileID: 1373525615529580167}
 --- !u!1 &5904263407414688952
 GameObject:
   m_ObjectHideFlags: 0
@@ -252309,12 +252315,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11b05719c8db0554ca0da3c0a2a72ebf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myType: 2
+  myType: 3
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 8558106703518941550}
   objCoinEarn: {fileID: 3454029388982292981}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &2284627776473803762
@@ -254201,9 +254209,11 @@ MonoBehaviour:
   myType: 0
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 1981980152251051005}
   objCoinEarn: {fileID: 6277669307710450523}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &1533339312072528172
@@ -254923,12 +254933,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11b05719c8db0554ca0da3c0a2a72ebf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myType: 2
+  myType: 3
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
+  secretBoxSprite2: {fileID: 0}
   lockBoxSprite: {fileID: -1958961624, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   spriteRenderer: {fileID: 3345462598490908075}
   objCoinEarn: {fileID: 9186757722312666560}
+  mushroom: {fileID: 0}
   bumpDistance: 0.2
   bumpDuration: 0.08
 --- !u!61 &5760104547530178169

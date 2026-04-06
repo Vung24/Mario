@@ -57695,7 +57695,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11b05719c8db0554ca0da3c0a2a72ebf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myType: 2
+  myType: 3
   normalBoxSprite: {fileID: 1085800802, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite: {fileID: 1915719539, guid: 10cba7b5f8a59ee4c9bd07622651a5d1, type: 3}
   secretBoxSprite2: {fileID: 0}
